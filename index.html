@@ -1,0 +1,3394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試用</title>
+    <meta name="description" content="測試用 - 個人回憶錄">
+    <meta name="author" content="MemoirFlow">
+    <meta name="generator" content="MemoirFlow">
+
+    <!-- 🔐 加密標記 - 必要元件 -->
+    <meta name="memoir-encryption" content="true">
+    <meta name="encryption-mode" content="fallback">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="測試用 - 回憶錄">
+    <meta property="og:description" content="個人回憶錄">
+
+    <!-- PWA Support -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- 後端資訊 -->
+    <meta name="memoir-id"        content="3e587b6b-1fcd-41fd-8b9c-3c61d4078ec7">
+    <meta name="content-hash"     content="313529ac94d3f540">
+    <meta name="backend-url"      content="https://mastermaso.com/memoirflow"> 
+    <meta name="approval-required" content="true">
+
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' https://mastermaso.com;
+        base-uri 'self';
+        object-src 'none';
+        script-src 'self' https://unpkg.com 'nonce-dc1db737-7bfd-4ce3-92e0-9a58463ebd5a';
+        style-src 'self' 'unsafe-inline' https://mastermaso.com;
+        img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com https://mastermaso.com;
+        font-src 'self' data:;
+        connect-src 'self' https://mastermaso.com https://mastermaso.com/memoirflow;
+        frame-src https://www.youtube.com https://www.youtube-nocookie.com;
+        upgrade-insecure-requests; 
+        block-all-mixed-content;
+    ">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
+
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/lucide@latest" nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a"></script>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- 🔐 密碼輸入面板 - 必要元件 -->
+    <div class="password-modal hidden" id="passwordModal">
+        <div class="password-container">
+            <div class="password-icon">🔐</div>
+            <div class="password-title">測試用</div>
+            <div class="password-subtitle">
+                此回憶錄受到加密保護<br>
+                請輸入密碼以查看內容
+            </div>
+            
+            <div class="password-input-group">
+                <input 
+                    type="password" 
+                    id="memoirPassword" 
+                    class="password-input" 
+                    placeholder="請輸入訪問密碼"
+                    autocomplete="off"
+                />
+            </div>
+            
+            <div class="password-actions">
+                <button id="unlockBtn" class="password-btn unlock-btn">
+                    🔓 解鎖查看
+                </button>
+                <button id="cancelBtn" class="password-btn cancel-btn">
+                    ❌ 取消
+                </button>
+            </div>
+            
+            <div class="password-error hidden" id="passwordError">
+                ❌ 密碼錯誤，請重新輸入
+            </div>
+            
+            <div class="password-help">
+                <strong>🔐 安全提示：</strong><br>
+                • 此回憶錄使用 AES-256-GCM 加密技術保護<br>
+                • 請聯繫回憶錄建立者取得正確密碼<br>
+                • 多次輸入錯誤密碼可能會暫時鎖定訪問
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入畫面 -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-animation"></div>
+        <div class="loading-title">測試用</div>
+        <div class="loading-subtitle">加密回憶錄正在載入中...</div>
+        <div class="loading-status" id="loadingStatus">正在準備加密內容</div>
+    </div>
+
+    <!-- 主應用程式 -->
+    <div class="container hidden" id="app">
+        <!-- 標題列 -->
+        <div class="header">
+            <!-- 標題容器 -->
+            <div id="title-container">
+                <!-- 桌面版標題 -->
+                <div class="title-area">
+                    <div class="title-box">
+                        <div class="title-text truncate-one-line">測試用</div>
+                        <!-- 展開/收合按鈕 -->
+                        <button class="header-toggle-btn" id="headerToggleBtn" title="收合控制面板">
+                            <i data-lucide="chevron-up" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 手機版標題 -->
+                <div class="mobile-title truncate-one-line">
+                    測試用
+                    <!-- 手機版按鈕 -->
+                    <button class="header-toggle-btn mobile" id="mobileHeaderToggleBtn" title="收合控制面板">
+                        <i data-lucide="chevron-up" style="width: 12px; height: 12px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- header-content 區域（可展開/收合） -->
+            <div class="header-content" id="headerContent">
+                <!-- 現有的 header-content 內容保持不變 -->
+                <!-- 左側控制按鈕 -->
+                <div class="header-left">
+                    <!-- 設定按鈕 -->
+                    <div class="control-btn" id="settingsBtn" title="設定選單">
+                        <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
+                        <div class="encryption-indicator" title="內容已加密保護"></div>
+                    </div>
+                    
+                    <!-- 時間軸按鈕 -->
+                    <div class="control-btn" id="timelineBtn" title="時間軸導航" style="background: rgba(59, 130, 246, 0.8);">
+                        <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                    </div>
+                </div>
+                
+                <!-- 右側導航 -->
+                <div class="header-right">
+                    <div class="nav-btn" id="prevEventBtn" title="上一個時間節點">
+                        <i data-lucide="chevron-left" style="width: 12px; height: 12px;"></i>
+                    </div>
+                    <div class="event-counter">
+                        <span id="currentEventNum">1</span>/<span id="totalEvents">1</span>
+                    </div>
+                    <div class="nav-btn" id="nextEventBtn" title="下一個時間節點">
+                        <i data-lucide="chevron-right" style="width: 12px; height: 12px;"></i>
+                    </div>
+                    <div class="media-counter">
+                        <span id="mediaCount">0</span>媒體
+                    </div>
+                </div>
+            </div>
+
+            <!-- 字幕區域 -->
+            <div class="subtitle-area" id="subtitleArea">
+                <div class="subtitle-header">
+                    <div class="event-date" id="eventDate"></div>
+                    <div class="subtitle-toggle">
+                        <span style="color: white; font-size: 12px;">字幕</span>
+                        <div class="toggle-switch active" id="subtitleToggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="event-title truncate-one-line" id="eventTitle"></div>
+                <div class="event-description variant-2" id="eventDescription"></div>
+            </div>
+            <!-- 設定選單 -->
+            <div class="settings-menu" id="settingsMenu">
+                <div class="settings-item">
+                    <span>網格檢視</span>
+                    <div class="toggle-switch" id="gridToggle">
+                        <div class="toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <span>打字機效果</span>
+                    <div class="toggle-switch active" id="typewriterToggle">
+                        <div class="toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <span>字體大小</span>
+                    <div class="font-size-controls">
+                        <button class="font-btn" id="fontSmall" title="小">小</button>
+                        <button class="font-btn active" id="fontMedium" title="中">中</button>
+                        <button class="font-btn" id="fontLarge" title="大">大</button>
+                    </div>
+                </div>
+                
+                <button class="settings-btn" id="helpBtn">
+                    <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+                    使用說明
+                </button>
+                <!-- <button class="settings-btn skip-btn hidden" id="skipTypingBtn">
+                    <i data-lucide="skip-forward" style="width: 14px; height: 14px;"></i>
+                    跳過打字效果
+                </button> -->
+                <!-- 🔐 加密狀態提示 -->
+                <!-- <div class="encryption-status">
+                    <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
+                    <span class="encryption-status-text">內容已加密保護</span>
+                </div> -->
+            </div>
+        </div>
+
+        <!-- 主要內容區域 -->
+        <div class="main-content" id="mainContent">
+            <div class="media-area">
+                <!-- 輪播模式 -->
+                <div class="media-carousel" id="mediaCarousel">
+                    <!-- 主要媒體顯示區 -->
+                    <div class="main-media" id="mainMedia">
+                        <div class="media-display" id="mediaDisplay">
+                            <div style="text-align: center; color: #9ca3af;">
+                                <div style="font-size: 48px; margin-bottom: 20px;"></div>
+                                <div>內容正在載入中...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 媒體導航按鈕 -->
+                        <div class="media-nav-btn prev" id="prevMediaBtn" title="上一個媒體">
+                            <i data-lucide="chevron-left" style="width: 20px; height: 20px;"></i>
+                        </div>
+                        <div class="media-nav-btn next" id="nextMediaBtn" title="下一個媒體">
+                            <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+                        </div>
+                        
+                        <!-- 媒體計數器 -->
+                        <div class="media-counter-overlay" id="mediaCounterOverlay">
+                            1 / 1
+                        </div>
+                    </div>
+                    
+                    <!-- 媒體縮圖導航 -->
+                    <div class="media-thumbnails" id="mediaThumbnails">
+                        <div class="thumbnails-container">
+                            <div class="thumbnails-scroll" id="thumbnailsScroll">
+                                <!-- 縮圖將由 JavaScript 動態生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 網格模式 -->
+                <div class="media-grid hidden" id="mediaGrid">
+                    <div class="grid-container" id="gridContainer">
+                        <!-- 網格項目將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-indicator" id="progressIndicator">
+        <div class="progress-container">
+            <div class="progress-dots" id="progressDots">
+                <!-- 格子會由 JavaScript 動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔒 審核封鎖畫面（預設隱藏） -->
+    <div id="blockedScreen" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#111827);z-index:99999;color:#fff;text-align:center;padding:24px">
+    <div style="max-width:640px">
+        <div style="font-size:64px;margin-bottom:14px">🚫</div>
+        <h1 style="margin:0 0 8px">此回憶錄目前無法瀏覽</h1>
+        <p id="blockedReason" style="color:#9ca3af;line-height:1.7;margin:8px 0 18px">
+        依據審核政策，該內容尚未通過審核或已被暫停公開。
+        </p>
+        <button id="retryBtn" style="background:#2563eb;border:none;color:#fff;padding:10px 18px;border-radius:10px;cursor:pointer">重新嘗試</button>
+    </div>
+    </div>
+
+    <!-- 🚨 修正的審核腳本 - 使用正確的模板變數 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        (() => {
+            const q = (n) => document.querySelector(n);
+            const BACKEND      = q('meta[name="backend-url"]')?.content || 'https://mastermaso.com/memoirflow';
+            const MEMOIR_ID    = q('meta[name="memoir-id"]')?.content || '3e587b6b-1fcd-41fd-8b9c-3c61d4078ec7';
+            const CONTENT_HASH = q('meta[name="content-hash"]')?.content || '313529ac94d3f540';
+            const REQUIRE      = q('meta[name="approval-required"]')?.content === 'true';
+
+            window.__APPROVAL__ = { ok: true, token: null, status: 'approved' }; // ← 預設放行
+
+            // 共用稽核（不中斷頁面）
+            async function audit(endpoint, body) {
+                if (!BACKEND) return;
+                try {
+                await fetch(`${BACKEND}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                    memoir_id: MEMOIR_ID,
+                    content_hash: CONTENT_HASH,
+                    page_path: location.pathname,
+                    repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
+                    user_agent: navigator.userAgent,
+                    ...body
+                    })
+                });
+                } catch (_) {}
+            }
+
+            // ✅ 核可：成功就採用伺服器狀態；失敗/404/斷網 → 先放行，但啟動背景輪詢
+            async function checkApprovalOnce() {
+                if (!REQUIRE || !BACKEND) {
+                window.__APPROVAL__ = { ok: true, token: null, status: 'skipped' };
+                return { ok: true, status: 'skipped' };
+                }
+
+                await audit('/api/admin/track/attempt', { event: 'view_attempt' });
+
+                try {
+                const res = await fetch(`${BACKEND}/api/access/authorize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                    memoir_id: MEMOIR_ID,
+                    content_hash: CONTENT_HASH,
+                    page_path: location.pathname,
+                    repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
+                    })
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json(); // {status:'approved'|'pending'|'rejected'|'suspended', reason?, token?}
+
+                window.__APPROVAL__.status = data.status;
+                window.__APPROVAL__.token  = data.token || null;
+                if (data.status === 'approved' || data.status === 'pending') {
+                    // ← pending 也先讓看（fail-open），之後輪詢
+                    window.__APPROVAL__.ok = true;
+                    return { ok: true, status: data.status };
+                }
+
+                // 伺服器明確拒絕/暫停 → 立即封鎖
+                window.__APPROVAL__.ok = false;
+                showBlocked(data.reason || '已拒絕/暫停');
+                await audit('/api/admin/track/deny', { event: 'view_denied', status: data.status, reason: data.reason });
+                return { ok: false, status: data.status };
+
+                } catch (err) {
+                // ⬇️ 改成 fail-open：先讓看，但啟動背景輪詢
+                window.__APPROVAL__ = { ok: true, token: null, status: 'soft_open' };
+                return { ok: true, status: 'soft_open' };
+                }
+            }
+
+            // 🔁 背景輪詢：若被改成 rejected/suspended → 立即封鎖
+            let _approvalPollTimer = null;
+            function startApprovalPolling(intervalMs = 60000) { // 1 分鐘一次（可自行調整）
+                if (_approvalPollTimer || !REQUIRE || !BACKEND) return;
+                _approvalPollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(`${BACKEND}/api/access/authorize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memoir_id: MEMOIR_ID,
+                        content_hash: CONTENT_HASH,
+                        page_path: location.pathname,
+                        repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
+                    })
+                    });
+                    if (!res.ok) return; // 保持現狀
+                    const data = await res.json();
+                    if (data.status === 'rejected' || data.status === 'suspended') {
+                    showBlocked(data.reason || '已拒絕/暫停');
+                    clearInterval(_approvalPollTimer);
+                    _approvalPollTimer = null;
+                    await audit('/api/admin/track/deny', { event:'view_revoked', status:data.status, reason:data.reason });
+                    }
+                } catch (_) {
+                    // 忽略網路錯誤，維持現狀，等下次輪詢
+                }
+                }, intervalMs);
+            }
+
+            function showBlocked(msg) {
+                const loading = document.getElementById('loadingScreen');
+                const pwd     = document.getElementById('passwordModal');
+                const app     = document.getElementById('app');
+                const block   = document.getElementById('blockedScreen');
+                const br      = document.getElementById('blockedReason');
+
+                loading?.classList.add('hidden');
+                pwd?.classList.add('hidden');
+                app?.classList.add('hidden');
+                if (br) br.textContent = msg || br.textContent;
+                block?.classList.remove('hidden');
+            }
+
+            // ⬅️ 關鍵：初始化時「先核可一次」，不過任何非 approved 但非明確拒絕的狀態都放行，然後啟動輪詢
+            window.__preInitApproval__ = async function () {
+                const gate = await checkApprovalOnce();
+                if (gate.ok) startApprovalPolling(60000);
+                return !!gate.ok;
+            };
+        })();
+    </script>
+
+    <!-- ✅ 放在 audit/核可程式之後、
+        <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        // 🔐 MemoirFlow 統一前端解密系統 - 修正版本
+        (function() {
+            'use strict';
+            
+            console.log('🔐 解密腳本開始載入...');
+            
+            // 🚨 檢查並避免重複初始化
+            if (window.MemoirFlowDecryptionSystem) {
+                console.warn('⚠️ 解密系統已初始化，跳過重複載入');
+                return;
+            }
+            
+            // 🚨 強制覆蓋標記
+            window.MemoirFlowDecryptionSystem = true;
+            
+            // 🚨 確保全域變數正確初始化
+            window.MemoirFlowGlobals = window.MemoirFlowGlobals || {
+                MEMOIR_DATA: null,
+                decryptionAttempts: 0,
+                MAX_ATTEMPTS: 3,
+                isInitialized: false,
+                decryptionMode: null,
+                debugInfo: {}
+            };
+            
+            const globals = window.MemoirFlowGlobals;
+            
+            // 🚨 模式特定的解密邏輯
+            
+            // 🔄 回退模式解密邏輯 - 修正版本
+            globals.decryptionMode = 'fallback';
+            
+            const fallbackData = 'ewogICJjaGluZXNlTmFtZSI6ICLmuKzoqabnlKgiLAogICJjcmVhdGVkQXQiOiAiMjAyNS0wOC0wM1QxNTo1MTozNC45MDg5MTY2MDArMDA6MDAiLAogICJlbmdsaXNoTmFtZSI6ICJ0ZXN0aW5nIiwKICAiZXZlbnRzIjogWwogICAgewogICAgICAiZGF0ZSI6ICIyMDI1LTA4LTAxIiwKICAgICAgImRlc2NyaXB0aW9uIjogIjEiLAogICAgICAiaWQiOiAiMTc1NDIzNjQwODIwNiIsCiAgICAgICJtZWRpYSI6IFsKICAgICAgICB7CiAgICAgICAgICAiZmlsZW5hbWUiOiAidXJsXzE3NTQzNDE4NzAwNDMiLAogICAgICAgICAgImlkIjogIjE3NTQzNDE4NzAwNDMiLAogICAgICAgICAgImlzVXJsIjogdHJ1ZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiSVU3UlVmUTFrMlU/c2k9T0JuZDJBZzJsREcyRzhzMiIsCiAgICAgICAgICAicGF0aCI6ICJodHRwczovL3lvdXR1LmJlL0lVN1JVZlExazJVP3NpPU9CbmQyQWcybERHMkc4czIiLAogICAgICAgICAgInR5cGUiOiAidmlkZW8iLAogICAgICAgICAgInVybCI6ICJodHRwczovL3lvdXR1LmJlL0lVN1JVZlExazJVP3NpPU9CbmQyQWcybERHMkc4czIiCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAwLAogICAgICAidGl0bGUiOiAiMSIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDIiLAogICAgICAiZGVzY3JpcHRpb24iOiAiMiIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDExODU4IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDU0XzBiNDA2OWVlLTBhZWQtNGE4NS05NGI3LWYzMTlhYjgwYWQzYS53ZWJwIiwKICAgICAgICAgICJpZCI6ICIwYjQwNjllZS0wYWVkLTRhODUtOTRiNy1mMzE5YWI4MGFkM2EiLAogICAgICAgICAgImlzVXJsIjogZmFsc2UsCiAgICAgICAgICAib3JpZ2luYWxOYW1lIjogImFubm91bmNpbmctbWlzdHJhbC53ZWJwIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ1NF8wYjQwNjllZS0wYWVkLTRhODUtOTRiNy1mMzE5YWI4MGFkM2Eud2VicCIsCiAgICAgICAgICAidHlwZSI6ICJpbWFnZSIsCiAgICAgICAgICAidXJsIjogbnVsbAogICAgICAgIH0KICAgICAgXSwKICAgICAgIm9yZGVyIjogMSwKICAgICAgInRpdGxlIjogIjIiCiAgICB9LAogICAgewogICAgICAiZGF0ZSI6ICIyMDI1LTA4LTAzIiwKICAgICAgImRlc2NyaXB0aW9uIjogIjMiLAogICAgICAiaWQiOiAiMTc1NDIzNjQxNjQ5MyIsCiAgICAgICJtZWRpYSI6IFsKICAgICAgICB7CiAgICAgICAgICAiZmlsZW5hbWUiOiAiMTc1NDIzNjQ2MV8xYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUucG5nIiwKICAgICAgICAgICJpZCI6ICIxYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUiLAogICAgICAgICAgImlzVXJsIjogZmFsc2UsCiAgICAgICAgICAib3JpZ2luYWxOYW1lIjogIm5hdmlnYWl0b24ucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ2MV8xYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAyLAogICAgICAidGl0bGUiOiAiMyIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDQiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNCIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDIyNTA4IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDY5XzU0MGZiOTI3LWRmMzItNDkxZi04ZDA1LWM4NTk5YmRmMjE3Zi5wbmciLAogICAgICAgICAgImlkIjogIjU0MGZiOTI3LWRmMzItNDkxZi04ZDA1LWM4NTk5YmRmMjE3ZiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAid29ya2Zsb3cucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ2OV81NDBmYjkyNy1kZjMyLTQ5MWYtOGQwNS1jODU5OWJkZjIxN2YucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAzLAogICAgICAidGl0bGUiOiAiNCIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDUiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNSIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDI2MTk5IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDgxXzM2NmEwZTdhLWU3ZWQtNDE1ZC1hZDVkLWZjYWQ4MGZlZGUwMi5wbmciLAogICAgICAgICAgImlkIjogIjM2NmEwZTdhLWU3ZWQtNDE1ZC1hZDVkLWZjYWQ4MGZlZGUwMiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiYWkucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ4MV8zNjZhMGU3YS1lN2VkLTQxNWQtYWQ1ZC1mY2FkODBmZWRlMDIucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA0LAogICAgICAidGl0bGUiOiAiNSIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDYiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNiIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDI5NDM5IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDg3XzE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZi5wbmciLAogICAgICAgICAgImlkIjogIjE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAidG9vbGJveC5wbmciLAogICAgICAgICAgInBhdGgiOiAiLi9tZWRpYS8xNzU0MjM2NDg3XzE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZi5wbmciLAogICAgICAgICAgInR5cGUiOiAiaW1hZ2UiLAogICAgICAgICAgInVybCI6IG51bGwKICAgICAgICB9CiAgICAgIF0sCiAgICAgICJvcmRlciI6IDUsCiAgICAgICJ0aXRsZSI6ICI2IgogICAgfSwKICAgIHsKICAgICAgImRhdGUiOiAiMjAyNS0wOC0wNyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICI3IiwKICAgICAgImlkIjogIjE3NTQyMzY0MzM0OTYiLAogICAgICAibWVkaWEiOiBbCiAgICAgICAgewogICAgICAgICAgImZpbGVuYW1lIjogIjE3NTQyMzY0OTNfYjc3NGNlM2UtMTcwNS00NWUzLTk0NjItNzU2NWE2ZmY1YjcxLnBuZyIsCiAgICAgICAgICAiaWQiOiAiYjc3NGNlM2UtMTcwNS00NWUzLTk0NjItNzU2NWE2ZmY1YjcxIiwKICAgICAgICAgICJpc1VybCI6IGZhbHNlLAogICAgICAgICAgIm9yaWdpbmFsTmFtZSI6ICJvZmZpY2UucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ5M19iNzc0Y2UzZS0xNzA1LTQ1ZTMtOTQ2Mi03NTY1YTZmZjViNzEucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA2LAogICAgICAidGl0bGUiOiAiNyIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDgiLAogICAgICAiZGVzY3JpcHRpb24iOiAiOCIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDM3MjAxIiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDk4Xzg5YmU2MTZlLWIwY2ItNDE2ZC1iNzI3LWNmYzFiZjcyMTE2MS5wbmciLAogICAgICAgICAgImlkIjogIjg5YmU2MTZlLWIwY2ItNDE2ZC1iNzI3LWNmYzFiZjcyMTE2MSIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAicm9ib3QucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ5OF84OWJlNjE2ZS1iMGNiLTQxNmQtYjcyNy1jZmMxYmY3MjExNjEucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA3LAogICAgICAidGl0bGUiOiAiOCIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDkiLAogICAgICAiZGVzY3JpcHRpb24iOiAiOSIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDQxMDEyIiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NTA0X2U0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MS5wbmciLAogICAgICAgICAgImlkIjogImU0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MSIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiY2hhdGJvdC5wbmciLAogICAgICAgICAgInBhdGgiOiAiLi9tZWRpYS8xNzU0MjM2NTA0X2U0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MS5wbmciLAogICAgICAgICAgInR5cGUiOiAiaW1hZ2UiLAogICAgICAgICAgInVybCI6IG51bGwKICAgICAgICB9CiAgICAgIF0sCiAgICAgICJvcmRlciI6IDgsCiAgICAgICJ0aXRsZSI6ICI5IgogICAgfQogIF0sCiAgImlkIjogIjNlNTg3YjZiLTFmY2QtNDFmZC04YjljLTNjNjFkNDA3OGVjNyIsCiAgImxhc3RNb2RpZmllZCI6ICIyMDI1LTA4LTA0VDIxOjExOjEzLjQ2NTUxMjEwMCswMDowMCIKfQ==';
+
+            // 🚨 修正：增強的 Base64 解碼函式，更好的 UTF-8 支援
+            function base64DecodeUTF8(base64) {
+                try {
+                    // 方法 1: 使用現代瀏覽器的 TextDecoder API
+                    if (typeof TextDecoder !== 'undefined') {
+                        const binaryString = atob(base64);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        const decoder = new TextDecoder('utf-8');
+                        return decoder.decode(bytes);
+                    }
+                    
+                    // 方法 2: 回退方法，處理中文字符
+                    const binaryString = atob(base64);
+                    const bytes = [];
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes.push(binaryString.charCodeAt(i));
+                    }
+                    
+                    // 手動 UTF-8 解碼
+                    let result = '';
+                    let i = 0;
+                    while (i < bytes.length) {
+                        let byte1 = bytes[i++];
+                        if (byte1 < 0x80) {
+                            // ASCII 字符
+                            result += String.fromCharCode(byte1);
+                        } else if ((byte1 & 0xE0) === 0xC0) {
+                            // 2 字節 UTF-8
+                            let byte2 = bytes[i++];
+                            result += String.fromCharCode(((byte1 & 0x1F) << 6) | (byte2 & 0x3F));
+                        } else if ((byte1 & 0xF0) === 0xE0) {
+                            // 3 字節 UTF-8（中文字符）
+                            let byte2 = bytes[i++];
+                            let byte3 = bytes[i++];
+                            result += String.fromCharCode(((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+                        } else {
+                            // 跳過無法處理的字節
+                            result += '?';
+                        }
+                    }
+                    return result;
+                    
+                } catch (error) {
+                    console.error('❌ Base64 UTF-8 解碼失敗:', error);
+                    // 最後的回退方法
+                    return atob(base64);
+                }
+            }
+
+            // 回退解密函式
+            window.decryptMemoirData = async function() {
+                try {
+                    console.log('🔄 使用回退解密模式...');
+                    
+                    const decodedData = base64DecodeUTF8(fallbackData);
+                    console.log('🔍 解碼後的資料長度:', decodedData.length);
+                    
+                    // 🚨 嘗試解析 JSON，增加錯誤處理
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(decodedData);
+                    } catch (parseError) {
+                        console.error('❌ JSON 解析失敗:', parseError);
+                        console.log('🔍 嘗試修復 JSON...');
+                        
+                        // 嘗試修復常見的 JSON 問題
+                        let fixedData = decodedData
+                            .replace(/[\u0000-\u001F]+/g, '') // 移除控制字符
+                            .trim();
+                        
+                        parsedData = JSON.parse(fixedData);
+                    }
+                    
+                    globals.MEMOIR_DATA = parsedData;
+                    
+                    // 🚨 重要：驗證解密後的數據
+                    if (!globals.MEMOIR_DATA || typeof globals.MEMOIR_DATA !== 'object') {
+                        throw new Error('解密後的數據格式無效');
+                    }
+                    
+                    // 🚨 驗證必要欄位
+                    const chineseName = globals.MEMOIR_DATA.chineseName || globals.MEMOIR_DATA.chinese_name;
+                    if (!chineseName) {
+                        console.warn('⚠️ 警告：找不到中文名稱欄位');
+                    } else {
+                        console.log('✅ 中文名稱解碼成功:', chineseName);
+                    }
+                    
+                    if (!globals.MEMOIR_DATA.events || !Array.isArray(globals.MEMOIR_DATA.events)) {
+                        console.warn('⚠️ 警告：事件資料格式異常');
+                        globals.MEMOIR_DATA.events = [];
+                    } else {
+                        console.log('✅ 事件數量:', globals.MEMOIR_DATA.events.length);
+                    }
+                    
+                    // 🚨 媒體路徑修正邏輯（改善版本）
+                    if (globals.MEMOIR_DATA.events) {
+                        console.log('🎬 開始媒體路徑檢查和修正...');
+                        
+                        let totalMediaCount = 0;
+                        let fixedPathCount = 0;
+                        
+                        globals.MEMOIR_DATA.events.forEach(function(event, eventIndex) {
+                            if (event.media && Array.isArray(event.media)) {
+                                event.media.forEach(function(media, mediaIndex) {
+                                    totalMediaCount++;
+                                    
+                                    if (!media.path) {
+                                        console.warn(`⚠️ [Event ${eventIndex}, Media ${mediaIndex}] 缺少路徑`);
+                                        media.path = './media/placeholder.jpg';
+                                        return;
+                                    }
+                                    
+                                    const originalPath = media.path;
+                                    
+                                    // 跳過網路 URL
+                                    if (media.path.startsWith('http://') || media.path.startsWith('https://')) {
+                                        return;
+                                    }
+                                    
+                                    // 修正本地檔案路徑
+                                    if (!media.path.startsWith('./media/')) {
+                                        if (media.path.startsWith('media/')) {
+                                            media.path = './' + media.path;
+                                        } else {
+                                            const filename = media.path.split(/[/\\]/).pop() || 
+                                                           media.filename || 
+                                                           media.originalName ||
+                                                           `media-${mediaIndex}.jpg`;
+                                            media.path = './media/' + filename;
+                                        }
+                                        fixedPathCount++;
+                                        console.log(`🔧 修正路徑: ${originalPath} -> ${media.path}`);
+                                    }
+                                    
+                                    // 確保媒體有必要的屬性
+                                    if (!media.originalName && media.filename) {
+                                        media.originalName = media.filename;
+                                    }
+                                    if (!media.type && !media.media_type) {
+                                        const ext = (media.path.split('.').pop() || '').toLowerCase();
+                                        media.type = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext) ? 'image' : 
+                                                   ['mp4', 'mov', 'avi', 'webm'].includes(ext) ? 'video' : 'image';
+                                    }
+                                });
+                            }
+                        });
+                        
+                        console.log(`📊 媒體路徑檢查完成: 總計 ${totalMediaCount} 個，修正 ${fixedPathCount} 個`);
+                    }
+                    
+                    // 🚨 設定到全域變數
+                    console.log('✅ 回退解密成功');
+
+                    window.MEMOIR_DATA = globals.MEMOIR_DATA;                    
+                    window.MemoirFlowUtils.initializeApp();
+
+                    return true;
+                    
+                } catch (error) {
+                    console.error('❌ 回退解密失敗:', error);
+                    console.error('❌ 錯誤詳情:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // 🚨 提供更詳細的錯誤信息
+                    let errorMessage = '解密失敗：' + error.message;
+                    if (error.name === 'SyntaxError') {
+                        errorMessage = '數據格式錯誤，可能是檔案損壞或加密失敗';
+                    } else if (error.message.includes('TextDecoder')) {
+                        errorMessage = '瀏覽器不支援文字解碼，請更新瀏覽器';
+                    }
+                    
+                    window.MemoirFlowUtils.showDecryptionError(errorMessage);
+                    return false;
+                }
+            };
+            
+            console.log('✅ 修正的回退解密邏輯載入完成');
+        
+            
+            // 🚨 工具函式
+            if (!window.MemoirFlowUtils) {
+                window.MemoirFlowUtils = {
+                    initializeApp: function() {
+                        console.log('🚀 MemoirFlowUtils 初始化應用程式');
+                        
+                        const loadingScreen = document.getElementById('loadingScreen');
+                        const passwordModal = document.getElementById('passwordModal');
+                        const app = document.getElementById('app');
+                        
+                        if (loadingScreen) loadingScreen.classList.add('hidden');
+                        if (passwordModal) passwordModal.classList.add('hidden');
+                        if (app) app.classList.remove('hidden');
+                        
+                        // 🚨 確保數據正確設定到全域
+                        if (globals.MEMOIR_DATA) {
+                            window.MEMOIR_DATA = globals.MEMOIR_DATA;
+                            console.log('✅ MEMOIR_DATA 已設定到全域變數');
+                        }
+                        
+                        // 嘗試呼叫範本中的初始化函式
+                        if (typeof window.initializeMemoirApp === 'function') {
+                            window.initializeMemoirApp();
+                        } else if (typeof initializeApp === 'function') {
+                            initializeApp();
+                        } else {
+                            console.warn('⚠️ 找不到初始化函數，但繼續執行');
+                        }
+                        
+                        globals.isInitialized = true;
+                    },
+                    
+                    showDecryptionError: function(message) {
+                        console.error('❌ 解密錯誤:', message);
+                        
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'decryption-error';
+                        errorDiv.style.cssText = `
+                            position: fixed;
+                            inset: 0;
+                            background: linear-gradient(135deg, #1a1a2e, #16213e);
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 10000;
+                            text-align: center;
+                            padding: 20px;
+                            color: white;
+                        `;
+                        errorDiv.innerHTML = `
+                            <div style="font-size: 80px; margin-bottom: 30px; color: #ef4444;">❌</div>
+                            <h1 style="font-size: 32px; font-weight: bold; margin-bottom: 20px;">解密失敗</h1>
+                            <p style="font-size: 18px; margin-bottom: 30px; max-width: 600px; line-height: 1.6; color: #9ca3af;">
+                                ${message}
+                            </p>
+                            <button onclick="location.reload()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+                                    color: white; border: none; padding: 16px 32px; border-radius: 12px; font-size: 18px; 
+                                    font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                                🔄 重新載入
+                            </button>
+                        `;
+                        document.body.appendChild(errorDiv);
+                    }
+                };
+            }
+            
+            // 🚨 確保在下一個事件循環中執行初始化
+            setTimeout(function() {
+                console.log('🔐 開始自動解密流程');
+                if (typeof window.decryptMemoirData === 'function') {
+                    try {
+                        window.decryptMemoirData().catch(function(error) {
+                            console.error('❌ 自動解密失敗:', error);
+                            window.MemoirFlowUtils.showDecryptionError('自動解密失敗: ' + error.message);
+                        });
+                    } catch (syncError) {
+                        console.error('❌ 解密函數執行失敗:', syncError);
+                        window.MemoirFlowUtils.showDecryptionError('解密函數執行失敗: ' + syncError.message);
+                    }
+                } else {
+                    console.error('❌ decryptMemoirData 函式未定義');
+                    window.MemoirFlowUtils.showDecryptionError('解密函式載入失敗');
+                }
+            }, 100);
+            
+            console.log('✅ 解密腳本載入完成');
+            
+        })();
+        </script>
+         之前 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        let _autoDecryptImpl, _decryptWithPwdImpl;
+
+        Object.defineProperty(window, 'autoDecrypt', {
+        configurable: true,
+        set(fn) { _autoDecryptImpl = fn; },
+        get() {
+            return async (opts = {}) => {
+            const ok = await (window.__preInitApproval__?.() ?? true);
+            if (!ok) return;
+            return _autoDecryptImpl?.({ ...opts, approvalToken: window.__APPROVAL__.token });
+            };
+        }
+        });
+
+        Object.defineProperty(window, 'decryptMemoirData', {
+        configurable: true,
+        set(fn) { _decryptWithPwdImpl = fn; },
+        get() {
+            return async (password, extra = {}) => {
+            const ok = await (window.__preInitApproval__?.() ?? true);
+            if (!ok) return;
+            return _decryptWithPwdImpl?.(password, { ...extra, approvalToken: window.__APPROVAL__.token });
+            };
+        }
+        });
+    </script>
+
+    <!-- 🔐 解密腳本注入點 - 關鍵！這是解密腳本的注入位置 -->
+    
+        <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        // 🔐 MemoirFlow 統一前端解密系統 - 修正版本
+        (function() {
+            'use strict';
+            
+            console.log('🔐 解密腳本開始載入...');
+            
+            // 🚨 檢查並避免重複初始化
+            if (window.MemoirFlowDecryptionSystem) {
+                console.warn('⚠️ 解密系統已初始化，跳過重複載入');
+                return;
+            }
+            
+            // 🚨 強制覆蓋標記
+            window.MemoirFlowDecryptionSystem = true;
+            
+            // 🚨 確保全域變數正確初始化
+            window.MemoirFlowGlobals = window.MemoirFlowGlobals || {
+                MEMOIR_DATA: null,
+                decryptionAttempts: 0,
+                MAX_ATTEMPTS: 3,
+                isInitialized: false,
+                decryptionMode: null,
+                debugInfo: {}
+            };
+            
+            const globals = window.MemoirFlowGlobals;
+            
+            // 🚨 模式特定的解密邏輯
+            
+            // 🔄 回退模式解密邏輯 - 修正版本
+            globals.decryptionMode = 'fallback';
+            
+            const fallbackData = 'ewogICJjaGluZXNlTmFtZSI6ICLmuKzoqabnlKgiLAogICJjcmVhdGVkQXQiOiAiMjAyNS0wOC0wM1QxNTo1MTozNC45MDg5MTY2MDArMDA6MDAiLAogICJlbmdsaXNoTmFtZSI6ICJ0ZXN0aW5nIiwKICAiZXZlbnRzIjogWwogICAgewogICAgICAiZGF0ZSI6ICIyMDI1LTA4LTAxIiwKICAgICAgImRlc2NyaXB0aW9uIjogIjEiLAogICAgICAiaWQiOiAiMTc1NDIzNjQwODIwNiIsCiAgICAgICJtZWRpYSI6IFsKICAgICAgICB7CiAgICAgICAgICAiZmlsZW5hbWUiOiAidXJsXzE3NTQzNDE4NzAwNDMiLAogICAgICAgICAgImlkIjogIjE3NTQzNDE4NzAwNDMiLAogICAgICAgICAgImlzVXJsIjogdHJ1ZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiSVU3UlVmUTFrMlU/c2k9T0JuZDJBZzJsREcyRzhzMiIsCiAgICAgICAgICAicGF0aCI6ICJodHRwczovL3lvdXR1LmJlL0lVN1JVZlExazJVP3NpPU9CbmQyQWcybERHMkc4czIiLAogICAgICAgICAgInR5cGUiOiAidmlkZW8iLAogICAgICAgICAgInVybCI6ICJodHRwczovL3lvdXR1LmJlL0lVN1JVZlExazJVP3NpPU9CbmQyQWcybERHMkc4czIiCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAwLAogICAgICAidGl0bGUiOiAiMSIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDIiLAogICAgICAiZGVzY3JpcHRpb24iOiAiMiIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDExODU4IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDU0XzBiNDA2OWVlLTBhZWQtNGE4NS05NGI3LWYzMTlhYjgwYWQzYS53ZWJwIiwKICAgICAgICAgICJpZCI6ICIwYjQwNjllZS0wYWVkLTRhODUtOTRiNy1mMzE5YWI4MGFkM2EiLAogICAgICAgICAgImlzVXJsIjogZmFsc2UsCiAgICAgICAgICAib3JpZ2luYWxOYW1lIjogImFubm91bmNpbmctbWlzdHJhbC53ZWJwIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ1NF8wYjQwNjllZS0wYWVkLTRhODUtOTRiNy1mMzE5YWI4MGFkM2Eud2VicCIsCiAgICAgICAgICAidHlwZSI6ICJpbWFnZSIsCiAgICAgICAgICAidXJsIjogbnVsbAogICAgICAgIH0KICAgICAgXSwKICAgICAgIm9yZGVyIjogMSwKICAgICAgInRpdGxlIjogIjIiCiAgICB9LAogICAgewogICAgICAiZGF0ZSI6ICIyMDI1LTA4LTAzIiwKICAgICAgImRlc2NyaXB0aW9uIjogIjMiLAogICAgICAiaWQiOiAiMTc1NDIzNjQxNjQ5MyIsCiAgICAgICJtZWRpYSI6IFsKICAgICAgICB7CiAgICAgICAgICAiZmlsZW5hbWUiOiAiMTc1NDIzNjQ2MV8xYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUucG5nIiwKICAgICAgICAgICJpZCI6ICIxYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUiLAogICAgICAgICAgImlzVXJsIjogZmFsc2UsCiAgICAgICAgICAib3JpZ2luYWxOYW1lIjogIm5hdmlnYWl0b24ucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ2MV8xYjc0M2VhNy0yMDNkLTRkNjQtODMwZS03NjRiZGIxNmRlMDUucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAyLAogICAgICAidGl0bGUiOiAiMyIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDQiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNCIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDIyNTA4IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDY5XzU0MGZiOTI3LWRmMzItNDkxZi04ZDA1LWM4NTk5YmRmMjE3Zi5wbmciLAogICAgICAgICAgImlkIjogIjU0MGZiOTI3LWRmMzItNDkxZi04ZDA1LWM4NTk5YmRmMjE3ZiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAid29ya2Zsb3cucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ2OV81NDBmYjkyNy1kZjMyLTQ5MWYtOGQwNS1jODU5OWJkZjIxN2YucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiAzLAogICAgICAidGl0bGUiOiAiNCIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDUiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNSIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDI2MTk5IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDgxXzM2NmEwZTdhLWU3ZWQtNDE1ZC1hZDVkLWZjYWQ4MGZlZGUwMi5wbmciLAogICAgICAgICAgImlkIjogIjM2NmEwZTdhLWU3ZWQtNDE1ZC1hZDVkLWZjYWQ4MGZlZGUwMiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiYWkucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ4MV8zNjZhMGU3YS1lN2VkLTQxNWQtYWQ1ZC1mY2FkODBmZWRlMDIucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA0LAogICAgICAidGl0bGUiOiAiNSIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDYiLAogICAgICAiZGVzY3JpcHRpb24iOiAiNiIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDI5NDM5IiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDg3XzE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZi5wbmciLAogICAgICAgICAgImlkIjogIjE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZiIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAidG9vbGJveC5wbmciLAogICAgICAgICAgInBhdGgiOiAiLi9tZWRpYS8xNzU0MjM2NDg3XzE4OGEyN2JkLTRhY2MtNDhjNy05MDI4LWRjN2Y1MmRlZmRlZi5wbmciLAogICAgICAgICAgInR5cGUiOiAiaW1hZ2UiLAogICAgICAgICAgInVybCI6IG51bGwKICAgICAgICB9CiAgICAgIF0sCiAgICAgICJvcmRlciI6IDUsCiAgICAgICJ0aXRsZSI6ICI2IgogICAgfSwKICAgIHsKICAgICAgImRhdGUiOiAiMjAyNS0wOC0wNyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICI3IiwKICAgICAgImlkIjogIjE3NTQyMzY0MzM0OTYiLAogICAgICAibWVkaWEiOiBbCiAgICAgICAgewogICAgICAgICAgImZpbGVuYW1lIjogIjE3NTQyMzY0OTNfYjc3NGNlM2UtMTcwNS00NWUzLTk0NjItNzU2NWE2ZmY1YjcxLnBuZyIsCiAgICAgICAgICAiaWQiOiAiYjc3NGNlM2UtMTcwNS00NWUzLTk0NjItNzU2NWE2ZmY1YjcxIiwKICAgICAgICAgICJpc1VybCI6IGZhbHNlLAogICAgICAgICAgIm9yaWdpbmFsTmFtZSI6ICJvZmZpY2UucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ5M19iNzc0Y2UzZS0xNzA1LTQ1ZTMtOTQ2Mi03NTY1YTZmZjViNzEucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA2LAogICAgICAidGl0bGUiOiAiNyIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDgiLAogICAgICAiZGVzY3JpcHRpb24iOiAiOCIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDM3MjAxIiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NDk4Xzg5YmU2MTZlLWIwY2ItNDE2ZC1iNzI3LWNmYzFiZjcyMTE2MS5wbmciLAogICAgICAgICAgImlkIjogIjg5YmU2MTZlLWIwY2ItNDE2ZC1iNzI3LWNmYzFiZjcyMTE2MSIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAicm9ib3QucG5nIiwKICAgICAgICAgICJwYXRoIjogIi4vbWVkaWEvMTc1NDIzNjQ5OF84OWJlNjE2ZS1iMGNiLTQxNmQtYjcyNy1jZmMxYmY3MjExNjEucG5nIiwKICAgICAgICAgICJ0eXBlIjogImltYWdlIiwKICAgICAgICAgICJ1cmwiOiBudWxsCiAgICAgICAgfQogICAgICBdLAogICAgICAib3JkZXIiOiA3LAogICAgICAidGl0bGUiOiAiOCIKICAgIH0sCiAgICB7CiAgICAgICJkYXRlIjogIjIwMjUtMDgtMDkiLAogICAgICAiZGVzY3JpcHRpb24iOiAiOSIsCiAgICAgICJpZCI6ICIxNzU0MjM2NDQxMDEyIiwKICAgICAgIm1lZGlhIjogWwogICAgICAgIHsKICAgICAgICAgICJmaWxlbmFtZSI6ICIxNzU0MjM2NTA0X2U0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MS5wbmciLAogICAgICAgICAgImlkIjogImU0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MSIsCiAgICAgICAgICAiaXNVcmwiOiBmYWxzZSwKICAgICAgICAgICJvcmlnaW5hbE5hbWUiOiAiY2hhdGJvdC5wbmciLAogICAgICAgICAgInBhdGgiOiAiLi9tZWRpYS8xNzU0MjM2NTA0X2U0ZmZlN2MxLTgxMDctNDhkNi1iM2NjLTQwNjYyZjlmZGU0MS5wbmciLAogICAgICAgICAgInR5cGUiOiAiaW1hZ2UiLAogICAgICAgICAgInVybCI6IG51bGwKICAgICAgICB9CiAgICAgIF0sCiAgICAgICJvcmRlciI6IDgsCiAgICAgICJ0aXRsZSI6ICI5IgogICAgfQogIF0sCiAgImlkIjogIjNlNTg3YjZiLTFmY2QtNDFmZC04YjljLTNjNjFkNDA3OGVjNyIsCiAgImxhc3RNb2RpZmllZCI6ICIyMDI1LTA4LTA0VDIxOjExOjEzLjQ2NTUxMjEwMCswMDowMCIKfQ==';
+
+            // 🚨 修正：增強的 Base64 解碼函式，更好的 UTF-8 支援
+            function base64DecodeUTF8(base64) {
+                try {
+                    // 方法 1: 使用現代瀏覽器的 TextDecoder API
+                    if (typeof TextDecoder !== 'undefined') {
+                        const binaryString = atob(base64);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        const decoder = new TextDecoder('utf-8');
+                        return decoder.decode(bytes);
+                    }
+                    
+                    // 方法 2: 回退方法，處理中文字符
+                    const binaryString = atob(base64);
+                    const bytes = [];
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes.push(binaryString.charCodeAt(i));
+                    }
+                    
+                    // 手動 UTF-8 解碼
+                    let result = '';
+                    let i = 0;
+                    while (i < bytes.length) {
+                        let byte1 = bytes[i++];
+                        if (byte1 < 0x80) {
+                            // ASCII 字符
+                            result += String.fromCharCode(byte1);
+                        } else if ((byte1 & 0xE0) === 0xC0) {
+                            // 2 字節 UTF-8
+                            let byte2 = bytes[i++];
+                            result += String.fromCharCode(((byte1 & 0x1F) << 6) | (byte2 & 0x3F));
+                        } else if ((byte1 & 0xF0) === 0xE0) {
+                            // 3 字節 UTF-8（中文字符）
+                            let byte2 = bytes[i++];
+                            let byte3 = bytes[i++];
+                            result += String.fromCharCode(((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+                        } else {
+                            // 跳過無法處理的字節
+                            result += '?';
+                        }
+                    }
+                    return result;
+                    
+                } catch (error) {
+                    console.error('❌ Base64 UTF-8 解碼失敗:', error);
+                    // 最後的回退方法
+                    return atob(base64);
+                }
+            }
+
+            // 回退解密函式
+            window.decryptMemoirData = async function() {
+                try {
+                    console.log('🔄 使用回退解密模式...');
+                    
+                    const decodedData = base64DecodeUTF8(fallbackData);
+                    console.log('🔍 解碼後的資料長度:', decodedData.length);
+                    
+                    // 🚨 嘗試解析 JSON，增加錯誤處理
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(decodedData);
+                    } catch (parseError) {
+                        console.error('❌ JSON 解析失敗:', parseError);
+                        console.log('🔍 嘗試修復 JSON...');
+                        
+                        // 嘗試修復常見的 JSON 問題
+                        let fixedData = decodedData
+                            .replace(/[\u0000-\u001F]+/g, '') // 移除控制字符
+                            .trim();
+                        
+                        parsedData = JSON.parse(fixedData);
+                    }
+                    
+                    globals.MEMOIR_DATA = parsedData;
+                    
+                    // 🚨 重要：驗證解密後的數據
+                    if (!globals.MEMOIR_DATA || typeof globals.MEMOIR_DATA !== 'object') {
+                        throw new Error('解密後的數據格式無效');
+                    }
+                    
+                    // 🚨 驗證必要欄位
+                    const chineseName = globals.MEMOIR_DATA.chineseName || globals.MEMOIR_DATA.chinese_name;
+                    if (!chineseName) {
+                        console.warn('⚠️ 警告：找不到中文名稱欄位');
+                    } else {
+                        console.log('✅ 中文名稱解碼成功:', chineseName);
+                    }
+                    
+                    if (!globals.MEMOIR_DATA.events || !Array.isArray(globals.MEMOIR_DATA.events)) {
+                        console.warn('⚠️ 警告：事件資料格式異常');
+                        globals.MEMOIR_DATA.events = [];
+                    } else {
+                        console.log('✅ 事件數量:', globals.MEMOIR_DATA.events.length);
+                    }
+                    
+                    // 🚨 媒體路徑修正邏輯（改善版本）
+                    if (globals.MEMOIR_DATA.events) {
+                        console.log('🎬 開始媒體路徑檢查和修正...');
+                        
+                        let totalMediaCount = 0;
+                        let fixedPathCount = 0;
+                        
+                        globals.MEMOIR_DATA.events.forEach(function(event, eventIndex) {
+                            if (event.media && Array.isArray(event.media)) {
+                                event.media.forEach(function(media, mediaIndex) {
+                                    totalMediaCount++;
+                                    
+                                    if (!media.path) {
+                                        console.warn(`⚠️ [Event ${eventIndex}, Media ${mediaIndex}] 缺少路徑`);
+                                        media.path = './media/placeholder.jpg';
+                                        return;
+                                    }
+                                    
+                                    const originalPath = media.path;
+                                    
+                                    // 跳過網路 URL
+                                    if (media.path.startsWith('http://') || media.path.startsWith('https://')) {
+                                        return;
+                                    }
+                                    
+                                    // 修正本地檔案路徑
+                                    if (!media.path.startsWith('./media/')) {
+                                        if (media.path.startsWith('media/')) {
+                                            media.path = './' + media.path;
+                                        } else {
+                                            const filename = media.path.split(/[/\\]/).pop() || 
+                                                           media.filename || 
+                                                           media.originalName ||
+                                                           `media-${mediaIndex}.jpg`;
+                                            media.path = './media/' + filename;
+                                        }
+                                        fixedPathCount++;
+                                        console.log(`🔧 修正路徑: ${originalPath} -> ${media.path}`);
+                                    }
+                                    
+                                    // 確保媒體有必要的屬性
+                                    if (!media.originalName && media.filename) {
+                                        media.originalName = media.filename;
+                                    }
+                                    if (!media.type && !media.media_type) {
+                                        const ext = (media.path.split('.').pop() || '').toLowerCase();
+                                        media.type = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext) ? 'image' : 
+                                                   ['mp4', 'mov', 'avi', 'webm'].includes(ext) ? 'video' : 'image';
+                                    }
+                                });
+                            }
+                        });
+                        
+                        console.log(`📊 媒體路徑檢查完成: 總計 ${totalMediaCount} 個，修正 ${fixedPathCount} 個`);
+                    }
+                    
+                    // 🚨 設定到全域變數
+                    console.log('✅ 回退解密成功');
+
+                    window.MEMOIR_DATA = globals.MEMOIR_DATA;                    
+                    window.MemoirFlowUtils.initializeApp();
+
+                    return true;
+                    
+                } catch (error) {
+                    console.error('❌ 回退解密失敗:', error);
+                    console.error('❌ 錯誤詳情:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // 🚨 提供更詳細的錯誤信息
+                    let errorMessage = '解密失敗：' + error.message;
+                    if (error.name === 'SyntaxError') {
+                        errorMessage = '數據格式錯誤，可能是檔案損壞或加密失敗';
+                    } else if (error.message.includes('TextDecoder')) {
+                        errorMessage = '瀏覽器不支援文字解碼，請更新瀏覽器';
+                    }
+                    
+                    window.MemoirFlowUtils.showDecryptionError(errorMessage);
+                    return false;
+                }
+            };
+            
+            console.log('✅ 修正的回退解密邏輯載入完成');
+        
+            
+            // 🚨 工具函式
+            if (!window.MemoirFlowUtils) {
+                window.MemoirFlowUtils = {
+                    initializeApp: function() {
+                        console.log('🚀 MemoirFlowUtils 初始化應用程式');
+                        
+                        const loadingScreen = document.getElementById('loadingScreen');
+                        const passwordModal = document.getElementById('passwordModal');
+                        const app = document.getElementById('app');
+                        
+                        if (loadingScreen) loadingScreen.classList.add('hidden');
+                        if (passwordModal) passwordModal.classList.add('hidden');
+                        if (app) app.classList.remove('hidden');
+                        
+                        // 🚨 確保數據正確設定到全域
+                        if (globals.MEMOIR_DATA) {
+                            window.MEMOIR_DATA = globals.MEMOIR_DATA;
+                            console.log('✅ MEMOIR_DATA 已設定到全域變數');
+                        }
+                        
+                        // 嘗試呼叫範本中的初始化函式
+                        if (typeof window.initializeMemoirApp === 'function') {
+                            window.initializeMemoirApp();
+                        } else if (typeof initializeApp === 'function') {
+                            initializeApp();
+                        } else {
+                            console.warn('⚠️ 找不到初始化函數，但繼續執行');
+                        }
+                        
+                        globals.isInitialized = true;
+                    },
+                    
+                    showDecryptionError: function(message) {
+                        console.error('❌ 解密錯誤:', message);
+                        
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'decryption-error';
+                        errorDiv.style.cssText = `
+                            position: fixed;
+                            inset: 0;
+                            background: linear-gradient(135deg, #1a1a2e, #16213e);
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 10000;
+                            text-align: center;
+                            padding: 20px;
+                            color: white;
+                        `;
+                        errorDiv.innerHTML = `
+                            <div style="font-size: 80px; margin-bottom: 30px; color: #ef4444;">❌</div>
+                            <h1 style="font-size: 32px; font-weight: bold; margin-bottom: 20px;">解密失敗</h1>
+                            <p style="font-size: 18px; margin-bottom: 30px; max-width: 600px; line-height: 1.6; color: #9ca3af;">
+                                ${message}
+                            </p>
+                            <button onclick="location.reload()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+                                    color: white; border: none; padding: 16px 32px; border-radius: 12px; font-size: 18px; 
+                                    font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                                🔄 重新載入
+                            </button>
+                        `;
+                        document.body.appendChild(errorDiv);
+                    }
+                };
+            }
+            
+            // 🚨 確保在下一個事件循環中執行初始化
+            setTimeout(function() {
+                console.log('🔐 開始自動解密流程');
+                if (typeof window.decryptMemoirData === 'function') {
+                    try {
+                        window.decryptMemoirData().catch(function(error) {
+                            console.error('❌ 自動解密失敗:', error);
+                            window.MemoirFlowUtils.showDecryptionError('自動解密失敗: ' + error.message);
+                        });
+                    } catch (syncError) {
+                        console.error('❌ 解密函數執行失敗:', syncError);
+                        window.MemoirFlowUtils.showDecryptionError('解密函數執行失敗: ' + syncError.message);
+                    }
+                } else {
+                    console.error('❌ decryptMemoirData 函式未定義');
+                    window.MemoirFlowUtils.showDecryptionError('解密函式載入失敗');
+                }
+            }, 100);
+            
+            console.log('✅ 解密腳本載入完成');
+            
+        })();
+        </script>
+        
+
+    <!-- 安全性增強腳本 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        // 🔐 防止右鍵選單和常見快捷鍵
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // 🔐 防止文字選取
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+        
+        // 🔐 防止常見的開發者工具快捷鍵
+        document.addEventListener('keydown', function(e) {
+            // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+Shift+C
+            if (e.keyCode === 123 || 
+                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+                (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // 🔐 檢測開發者工具
+        let devtools = {open: false, orientation: null};
+        const threshold = 160;
+        setInterval(function() {
+            if (window.outerHeight - window.innerHeight > threshold || 
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    // console.clear();
+                    console.log('%c🔒 此內容受到保護', 'color: #ef4444; font-size: 20px; font-weight: bold;');
+                    console.log('%c⚠️ 檢測到開發者工具，部分功能可能受限', 'color: #f59e0b; font-size: 14px;');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 500);
+        
+        // 初始化 Lucide 圖標
+        if (typeof lucide !== 'undefined') {
+            try {
+                lucide.createIcons();
+            } catch (e) {
+                console.warn('⚠️ Lucide 圖標初始化失敗:', e);
+            }
+        }
+        
+        // 確保必要的函數存在
+        window.showPasswordPrompt = window.showPasswordPrompt || function(errorMessage = '') {
+            console.log('🔑 顯示密碼輸入提示');
+            
+            const loadingScreen = document.getElementById('loadingScreen');
+            const passwordModal = document.getElementById('passwordModal');
+            
+            if (loadingScreen) loadingScreen.classList.add('hidden');
+            if (passwordModal) {
+                passwordModal.classList.remove('hidden');
+                
+                const errorDiv = document.getElementById('passwordError');
+                if (errorMessage && errorDiv) {
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.classList.remove('hidden');
+                } else if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+                
+                const passwordInput = document.getElementById('memoirPassword');
+                if (passwordInput) {
+                    setTimeout(() => passwordInput.focus(), 100);
+                }
+            }
+        };
+        
+        // 密碼輸入處理
+        document.addEventListener('DOMContentLoaded', function() {
+            const unlockBtn = document.getElementById('unlockBtn');
+            const passwordInput = document.getElementById('memoirPassword');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            if (unlockBtn) {
+                unlockBtn.addEventListener('click', function() {
+                    const password = passwordInput ? passwordInput.value : '';
+                    if (typeof window.decryptMemoirData === 'function') {
+                        window.decryptMemoirData(password);
+                    }
+                });
+            }
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        unlockBtn.click();
+                    }
+                });
+            }
+            
+            cancelBtn.addEventListener('click', function () {
+                document.getElementById('passwordModal')?.classList.add('hidden');
+            });
+        });
+    </script>
+
+    <!-- 時間軸面板 -->
+    <div class="timeline-panel" id="timelinePanel">
+        <div class="timeline-content">
+            <div class="timeline-header">
+                <div class="timeline-title">
+                    <i data-lucide="calendar" style="width: 20px; height: 20px;"></i>
+                    時間軸導航
+                </div>
+                <div class="timeline-close" id="timelineClose">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </div>
+            </div>
+            <div class="timeline-scroll" id="timelineScroll">
+                <div class="timeline-line"></div>
+                <!-- 時間軸項目將由 JavaScript 動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 說明面板 -->
+    <div class="help-panel" id="helpPanel">
+        <div class="help-content">
+            <div class="help-header">
+                <div class="help-title">
+                    <i data-lucide="help-circle" style="width: 20px; height: 20px;"></i>
+                    使用說明
+                </div>
+                <div class="timeline-close" id="helpClose">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>🎮 基本操作</h3>
+                <div class="help-item">
+                    <div class="help-key">←/→</div>
+                    <span>切換時間節點</span>
+                </div>
+                <div class="help-item">
+                    <div class="help-key">點擊</div>
+                    <span>點擊媒體可全螢幕查看</span>
+                </div>
+                <div class="help-item">
+                    <div class="help-key">拖曳</div>
+                    <span>縮圖列表可上下滑動</span>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>👁️ 檢視模式</h3>
+                <div class="help-item">
+                    <div style="width: 16px; height: 16px; background: #3b82f6; border-radius: 4px; margin-right: 8px;"></div>
+                    <span><strong>輪播模式</strong> - 逐一瀏覽媒體，適合專注欣賞</span>
+                </div>
+                <div class="help-item">
+                    <div style="width: 16px; height: 16px; background: #10b981; border-radius: 4px; margin-right: 8px;"></div>
+                    <span><strong>網格模式</strong> - 一覽所有媒體，適合快速瀏覽</span>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>⌨️ 快捷鍵</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="help-item">
+                        <div class="help-key">G</div>
+                        <span>切換網格模式</span>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-key">T</div>
+                        <span>開啟時間軸</span>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-key">ESC</div>
+                        <span>關閉面板</span>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-key">Space</div>
+                        <span>播放/暫停</span>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-key">Home</div>
+                        <span>跳到第一個事件</span>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-key">End</div>
+                        <span>跳到最後一個事件</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>📊 進度指示器</h3>
+                <div class="help-item">
+                    <div class="help-key">🔵</div>
+                    <span>當前位置 - 發光的藍色格子</span>
+                </div>
+                <div class="help-item">
+                    <div class="help-key">🟢</div>
+                    <span>已瀏覽 - 綠色格子表示已看過的事件</span>
+                </div>
+                <div class="help-item">
+                    <div class="help-key">⚪</div>
+                    <span>未瀏覽 - 灰色格子表示未看過的事件</span>
+                </div>
+                <div class="help-item">
+                    <div class="help-key">點擊</div>
+                    <span>點擊任意格子可直接跳轉到該事件</span>
+                </div>
+            </div>            
+        </div>
+    </div>
+
+    <!-- 全螢幕媒體檢視器 -->
+    <div class="media-viewer" id="mediaViewer">
+        <div class="media-viewer-close" id="mediaViewerClose">
+            <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="media-viewer-content" id="mediaViewerContent">
+            <!-- 媒體內容將由 JavaScript 動態生成 -->
+        </div>
+    </div>
+
+    <!-- 左側懸浮工具列（只顯示：設定、時間軸） -->
+    <div id="quickDock" class="quick-dock" aria-label="快速工具列" role="navigation">
+        <button id="quickSettingsBtn" class="dock-item" type="button">
+            <span class="dock-icon">
+                <i data-lucide="settings" style="width:18px;height:18px;"></i>
+            </span>
+            <span class="dock-label">設定</span>
+        </button>
+
+        <button id="quickTimelineBtn" class="dock-item" type="button">
+            <span class="dock-icon">
+                <i data-lucide="calendar" style="width:18px;height:18px;"></i>
+            </span>
+            <span class="dock-label">時間軸</span>
+        </button>
+    </div>
+
+    <!-- 數據注入點 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+            // 🔐 加密模式：數據將透過解密腳本載入
+            console.log('🔐 加密模式初始化');
+            window.MEMOIR_DATA = null; // 將由解密腳本設定
+            </script>
+
+    <!-- 主要腳本 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        (function() {
+            'use strict';
+            
+            // 🔐 加密狀態變數
+            let ENCRYPTION_ENABLED = document.querySelector('meta[name="memoir-encryption"]')?.content === 'true';;
+            let MEMOIR_DATA = null;
+            let isUnlocked = false;
+            let currentEventIndex = 0;
+            let currentMediaIndex = 0;
+            let showSubtitles = true;
+            let showGrid = false;
+
+            // 記錄使用者偏好
+            const TYPEWRITER_KEY = 'memoirflow:typewriter';
+            let typewriterEnabled = localStorage.getItem(TYPEWRITER_KEY) !== 'false'; // 預設開啟
+
+            // ✅ 字體大小狀態與儲存鍵
+            const FONT_SIZE_KEY = 'memoirflow:font';
+            let fontSize = localStorage.getItem(FONT_SIZE_KEY) || 'medium';
+
+            let isTransitioning = false;
+            let typewriterTimer = null;
+            let typewriterText = '';
+            let typewriterIndex = 0;
+            let isTyping = false;
+
+            // DOM 元素快取
+            const elements = {
+                // 字體調整
+                fontSmall: document.getElementById('fontSmall'),
+                fontMedium: document.getElementById('fontMedium'),
+                fontLarge: document.getElementById('fontLarge'),
+
+                // 載入畫面
+                loadingScreen: document.getElementById('loadingScreen'),
+                passwordModal: document.getElementById('passwordModal'),
+                app: document.getElementById('app'),
+                loadingStatus: document.getElementById('loadingStatus'),
+
+                // 打字機效果開關
+                typewriterToggle: document.getElementById('typewriterToggle'),
+                
+                // 控制按鈕
+                settingsBtn: document.getElementById('settingsBtn'),
+                settingsMenu: document.getElementById('settingsMenu'),
+                timelineBtn: document.getElementById('timelineBtn'),
+                helpBtn: document.getElementById('helpBtn'),
+                skipTypingBtn: document.getElementById('skipTypingBtn'),
+                
+                // 導航
+                prevEventBtn: document.getElementById('prevEventBtn'),
+                nextEventBtn: document.getElementById('nextEventBtn'),
+                prevMediaBtn: document.getElementById('prevMediaBtn'),
+                nextMediaBtn: document.getElementById('nextMediaBtn'),
+                
+                // 切換器
+                gridToggle: document.getElementById('gridToggle'),
+                subtitleToggle: document.getElementById('subtitleToggle'),
+                
+                // 顯示區域
+                subtitleArea: document.getElementById('subtitleArea'),
+                mainContent: document.getElementById('mainContent'),
+                mediaCarousel: document.getElementById('mediaCarousel'),
+                mediaGrid: document.getElementById('mediaGrid'),
+                
+                // 媒體顯示
+                mediaDisplay: document.getElementById('mediaDisplay'),
+                thumbnailsScroll: document.getElementById('thumbnailsScroll'),
+                gridContainer: document.getElementById('gridContainer'),
+                
+                // 信息顯示
+                currentEventNum: document.getElementById('currentEventNum'),
+                totalEvents: document.getElementById('totalEvents'),
+                mediaCount: document.getElementById('mediaCount'),
+                eventDate: document.getElementById('eventDate'),
+                eventTitle: document.getElementById('eventTitle'),
+                eventDescription: document.getElementById('eventDescription'),
+                mediaCounterOverlay: document.getElementById('mediaCounterOverlay'),
+                
+                // 面板
+                timelinePanel: document.getElementById('timelinePanel'),
+                timelineClose: document.getElementById('timelineClose'),
+                timelineScroll: document.getElementById('timelineScroll'),
+                helpPanel: document.getElementById('helpPanel'),
+                helpClose: document.getElementById('helpClose'),
+                mediaViewer: document.getElementById('mediaViewer'),
+                mediaViewerClose: document.getElementById('mediaViewerClose'),
+                mediaViewerContent: document.getElementById('mediaViewerContent'),
+
+                // 新增：展開/收合按鈕
+                headerToggleBtn: document.getElementById('headerToggleBtn'),
+                mobileHeaderToggleBtn: document.getElementById('mobileHeaderToggleBtn'),
+                headerContent: document.getElementById('headerContent'),
+                header: document.querySelector('.header'),            
+
+                // 進度指示器
+                progressIndicator: document.getElementById('progressIndicator'),
+                progressDots: document.getElementById('progressDots'),
+                currentPosition: document.getElementById('currentPosition'),
+                totalEvents: document.getElementById('totalEvents'),
+                currentDate: document.getElementById('currentDate'),
+
+                // 左側按鈕
+                quickDock: document.getElementById('quickDock'),
+                quickSettingsBtn: document.getElementById('quickSettingsBtn'),
+                quickTimelineBtn: document.getElementById('quickTimelineBtn'),
+            };
+
+            const SETTINGS_POS_KEY = 'memoirflow:settings-pos';
+            let settingsDragReady = false;
+
+            function initDraggableSettingsMenu(){
+                const menu = elements.settingsMenu;
+                if (!menu) return;
+
+                // 加上懸浮類別，從此用 fixed 定位
+                menu.classList.add('floating');
+
+                // 若沒有握把，就動態加一個在最上方
+                if (!document.getElementById('settingsDragHandle')) {
+                    const handle = document.createElement('div');
+                    handle.id = 'settingsDragHandle';
+                    handle.className = 'drag-handle';
+                    handle.innerHTML =
+                    `<i data-lucide="grip-vertical" style="width:14px;height:14px;"></i><span>拖曳移動</span>`;
+                    menu.insertAdjacentElement('afterbegin', handle);
+                    if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch(e){} }
+                }
+
+                const handle = document.getElementById('settingsDragHandle');
+
+                // 1) 還原上次位置（若有）
+                const saved = JSON.parse(localStorage.getItem(SETTINGS_POS_KEY) || 'null');
+                if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+                    menu.style.left = saved.left + 'px';
+                    menu.style.top  = saved.top  + 'px';
+                } else {
+                    // 第一次顯示時靠近觸發按鈕
+                    positionSettingsNearButton();
+                }
+
+                // 2) 拖曳事件（Pointer Events 同時支援滑鼠與觸控）
+                let startX=0, startY=0, startLeft=0, startTop=0;
+
+                handle.addEventListener('pointerdown', (e)=>{
+                    e.preventDefault();
+                    e.stopPropagation();
+                    menu.setPointerCapture?.(e.pointerId);
+
+                    const rect = menu.getBoundingClientRect();
+                    startLeft = rect.left;
+                    startTop  = rect.top;
+                    startX = e.clientX;
+                    startY = e.clientY;
+
+                    menu.classList.add('dragging');
+                    window.addEventListener('pointermove', onMove);
+                    window.addEventListener('pointerup', onUp, { once:true });
+                });
+
+                function onMove(e){
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+
+                    const w = menu.offsetWidth;
+                    const h = menu.offsetHeight;
+                    const minL = 0, minT = 0;
+                    const maxL = window.innerWidth  - w;
+                    const maxT = window.innerHeight - h;
+
+                    const left = Math.min(Math.max(startLeft + dx, minL), maxL);
+                    const top  = Math.min(Math.max(startTop  + dy, minT), maxT);
+
+                    menu.style.left = left + 'px';
+                    menu.style.top  = top  + 'px';
+                }
+
+                function onUp(){
+                    menu.classList.remove('dragging');
+                    window.removeEventListener('pointermove', onMove);
+
+                    // 持久化
+                    const rect = menu.getBoundingClientRect();
+                    localStorage.setItem(SETTINGS_POS_KEY,
+                    JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) })
+                    );
+                }
+
+                // 3) 視窗尺寸改變時，確保面板仍在可視範圍內
+                window.addEventListener('resize', ()=>{
+                    const rect = menu.getBoundingClientRect();
+                    const w = menu.offsetWidth;
+                    const h = menu.offsetHeight;
+                    const left = Math.min(Math.max(rect.left, 0), window.innerWidth - w);
+                    const top  = Math.min(Math.max(rect.top , 0), window.innerHeight - h);
+                    menu.style.left = left + 'px';
+                    menu.style.top  = top  + 'px';
+                });
+
+                // 供開啟時使用：靠近觸發按鈕擺放
+                function positionSettingsNearButton(){
+                    const trigger = elements.quickSettingsBtn || elements.settingsBtn;
+                    if (!trigger) return;
+                    const b = trigger.getBoundingClientRect();
+
+                    // 先讓面板暫時可見以量測大小（不會閃爍）
+                    const wasHidden = !menu.classList.contains('visible');
+                    if (wasHidden) { menu.style.visibility='hidden'; menu.classList.add('visible'); }
+
+                    const menuW = menu.offsetWidth, menuH = menu.offsetHeight;
+
+                    let left = b.left + b.width + 12;
+                    let top  = b.top;
+                    left = Math.min(Math.max(12, left), window.innerWidth  - menuW - 12);
+                    top  = Math.min(Math.max(12, top ), window.innerHeight - menuH - 12);
+
+                    menu.style.left = left + 'px';
+                    menu.style.top  = top  + 'px';
+
+                    if (wasHidden) { menu.classList.remove('visible'); menu.style.visibility=''; }
+                }
+
+                // 讓外部可呼叫
+                window.positionSettingsNearButton = positionSettingsNearButton;
+                settingsDragReady = true;
+            }
+
+            // 渲染進度指示器
+            function renderProgressIndicator() {
+                if (!elements.progressDots || !MEMOIR_DATA || !MEMOIR_DATA.events) return;
+                
+                const sortedEvents = getSortedEvents();
+                const totalCount = sortedEvents.length;
+                
+                // 更新統計信息
+                if (elements.currentPosition) {
+                    elements.currentPosition.textContent = currentEventIndex + 1;
+                }
+                if (elements.totalEvents) {
+                    elements.totalEvents.textContent = totalCount;
+                }
+                
+                // 更新當前日期
+                if (elements.currentDate && sortedEvents[currentEventIndex]) {
+                    const currentEvent = sortedEvents[currentEventIndex];
+                    try {
+                        const eventDate = new Date(currentEvent.date).toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        elements.currentDate.textContent = eventDate;
+                    } catch (e) {
+                        elements.currentDate.textContent = currentEvent.date;
+                    }
+                }
+                
+                // 清空現有格子
+                elements.progressDots.innerHTML = '';
+                
+                // 決定是否使用滾動模式（超過40個格子）
+                const useScrollMode = totalCount > 40;
+                if (useScrollMode) {
+                    elements.progressDots.classList.add('scrollable');
+                } else {
+                    elements.progressDots.classList.remove('scrollable');
+                }
+                
+                // 生成格子
+                for (let i = 0; i < totalCount; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'progress-dot';
+                    
+                    // 設置狀態
+                    if (i < currentEventIndex) {
+                        dot.classList.add('completed');
+                    } else if (i === currentEventIndex) {
+                        dot.classList.add('current');
+                    }
+                    
+                    // 添加工具提示
+                    const event = sortedEvents[i];
+                    if (event) {
+                        try {
+                            const eventDate = new Date(event.date).toLocaleDateString('zh-TW');
+                            const tooltip = `${event.title} - ${eventDate}`;
+                            dot.setAttribute('data-tooltip', tooltip);
+                        } catch (e) {
+                            const tooltip = `${event.title} - ${event.date}`;
+                            dot.setAttribute('data-tooltip', tooltip);
+                        }
+                    }
+                    
+                    // 點擊事件
+                    dot.addEventListener('click', () => {
+                        goToEventFromProgress(i);
+                    });
+                    
+                    elements.progressDots.appendChild(dot);
+                }
+                
+                // 如果使用滾動模式，滾動到當前位置
+                if (useScrollMode) {
+                    setTimeout(() => {
+                        const currentDot = elements.progressDots.children[currentEventIndex];
+                        if (currentDot) {
+                            currentDot.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'nearest',
+                                inline: 'center'
+                            });
+                        }
+                    }, 100);
+                }
+            }
+
+            // 從進度指示器跳轉到事件
+            function goToEventFromProgress(index) {
+                if (!MEMOIR_DATA || !MEMOIR_DATA.events) return;
+                
+                const sortedEvents = getSortedEvents();
+                if (index >= 0 && index < sortedEvents.length) {
+                    // 添加點擊反饋動畫
+                    const dots = document.querySelectorAll('.progress-dot');
+                    if (dots[index]) {
+                        dots[index].style.transform = dots[index].classList.contains('current') ? 'scale(1.6)' : 'scale(1.5)';
+                        setTimeout(() => {
+                            dots[index].style.transform = '';
+                        }, 200);
+                    }
+                    
+                    // 跳轉到指定事件
+                    goToEvent(index);
+                }
+            }
+
+            // === Quick Dock（全新命名，避免和舊 header 收合撞名）===
+            const DOCK_OPEN_KEY = 'memoirflow:dock-open';
+            let isDockOpen = (localStorage.getItem(DOCK_OPEN_KEY) ?? 'true') === 'true';
+
+            function initDock() {
+                console.log('🔧 初始化 Quick Dock');
+
+                // 完全停用舊的 headerContent（你也可以直接刪掉那塊 HTML）
+                if (elements.headerContent) {
+                    elements.headerContent.classList.add('hidden');
+                    elements.headerContent.style.display = 'none';
+                }
+                if (elements.header) {
+                    elements.header.classList.add('collapsed');
+                }
+
+                // 初始 Dock 狀態
+                applyDockState(false);
+                // 加這行：依當前 isDockOpen 狀態把圖示定好
+                updateDockToggleIcon(!isDockOpen);
+
+                // 切換按鈕事件（桌面＋手機）
+                if (elements.headerToggleBtn) {
+                    elements.headerToggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleDock();
+                    });
+                }
+                if (elements.mobileHeaderToggleBtn) {
+                    elements.mobileHeaderToggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleDock();
+                    });
+                }
+
+                // Dock 內的兩顆快捷鍵
+                if (elements.quickSettingsBtn) {
+                    elements.quickSettingsBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation(); // 避免冒泡到 document 被關掉
+                        if (elements.settingsMenu) {
+                        elements.settingsMenu.classList.add('visible');
+                        }
+                        // 開啟設定後把 Dock 收起（可選，但很實用）
+                        if (isDockOpen) {
+                        isDockOpen = false;
+                        localStorage.setItem(DOCK_OPEN_KEY, 'false');
+                        applyDockState(true);
+                        updateDockToggleIcon(true);
+                        }
+                    });
+                }
+                if (elements.quickTimelineBtn) {
+                    elements.quickTimelineBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showTimeline(); // 先打開時間軸
+
+                        // 點完自動把 Dock 收起
+                        if (isDockOpen) {
+                        isDockOpen = false;
+                        localStorage.setItem(DOCK_OPEN_KEY, 'false');
+                        applyDockState(true);
+                        updateDockToggleIcon(true);
+                        }
+                    });
+                }
+            }
+
+            function toggleDock() {
+                isDockOpen = !isDockOpen;
+                localStorage.setItem(DOCK_OPEN_KEY, String(isDockOpen));
+                applyDockState(true);
+                updateDockToggleIcon(!isDockOpen); // Dock 關閉時顯示 chevron-down
+            }
+
+            function applyDockState() {
+                if (!elements.quickDock) return;
+                if (isDockOpen) {
+                    elements.quickDock.classList.add('open');
+                } else {
+                    elements.quickDock.classList.remove('open');
+                }
+                if (typeof lucide !== 'undefined') {
+                    try { lucide.createIcons(); } catch (e) {}
+                }
+            }
+
+            function updateDockToggleIcon(collapsed) {
+            const buttons = [elements.headerToggleBtn, elements.mobileHeaderToggleBtn];
+            buttons.forEach(btn => {
+                if (!btn) return;
+                const icon = btn.querySelector('i[data-lucide]');
+                if (!icon) return;
+
+                btn.classList.toggle('collapsed', collapsed);
+                btn.title = collapsed ? '展開工具列' : '收合工具列';
+                // ⬇️ 重點：改成左右雙箭頭
+                icon.setAttribute('data-lucide', collapsed ? 'chevrons-right' : 'chevrons-left');
+            });
+            if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (e) {} }
+            }
+
+            // 新增：Header 收合狀態管理
+            const HEADER_COLLAPSED_KEY = 'memoirflow:header-collapsed';
+            let isHeaderCollapsed = localStorage.getItem(HEADER_COLLAPSED_KEY) === 'true';
+
+            // 初始化 Header 收合功能
+            function initHeaderCollapse() {
+                console.log('🔧 初始化 Header 收合功能');
+                
+                // 應用初始狀態
+                applyHeaderCollapseState();
+                
+                // 桌面版按鈕事件
+                if (elements.headerToggleBtn) {
+                    elements.headerToggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleHeaderCollapse();
+                    });
+                }
+                
+                // 手機版按鈕事件
+                if (elements.mobileHeaderToggleBtn) {
+                    elements.mobileHeaderToggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleHeaderCollapse();
+                    });
+                }
+            }
+
+            // 切換 Header 收合狀態
+            function toggleHeaderCollapse() {
+                isHeaderCollapsed = !isHeaderCollapsed;
+                localStorage.setItem(HEADER_COLLAPSED_KEY, String(isHeaderCollapsed));
+                applyHeaderCollapseState();
+                
+                // 延遲調整主內容高度，等待動畫完成
+                // setTimeout(() => {
+                //     syncMainContentOffset();
+                // }, 400);
+            }
+
+            // 應用 Header 收合狀態
+            function applyHeaderCollapseState() {
+                if (!elements.headerContent || !elements.header) return;
+                
+                if (isHeaderCollapsed) {
+                    // 收合動畫 - 將所有尺寸設為 0
+                    const currentHeight = elements.headerContent.scrollHeight;
+                    
+                    // 設置初始狀態
+                    elements.headerContent.style.height = currentHeight + 'px';
+                    elements.headerContent.style.overflow = 'hidden';
+                    
+                    // 強制重繪
+                    elements.headerContent.offsetHeight;
+                    
+                    // 開始收合動畫 - 所有尺寸都設為 0
+                    elements.headerContent.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    elements.headerContent.style.height = '0px';
+                    elements.headerContent.style.minHeight = '0px';
+                    elements.headerContent.style.maxHeight = '0px';
+                    elements.headerContent.style.paddingTop = '0px';
+                    elements.headerContent.style.paddingBottom = '0px';
+                    elements.headerContent.style.paddingLeft = '0px';
+                    elements.headerContent.style.paddingRight = '0px';
+                    elements.headerContent.style.marginTop = '0px';
+                    elements.headerContent.style.marginBottom = '0px';
+                    elements.headerContent.style.marginLeft = '0px';
+                    elements.headerContent.style.marginRight = '0px';
+                    elements.headerContent.style.borderTopWidth = '0px';
+                    elements.headerContent.style.borderBottomWidth = '0px';
+                    elements.headerContent.style.opacity = '0';
+                    elements.headerContent.style.transform = 'scaleY(0)';
+                    
+                    // 動畫完成後設置 pointer-events 和 visibility
+                    setTimeout(() => {
+                        if (isHeaderCollapsed) { // 確保狀態沒有改變
+                            elements.headerContent.style.pointerEvents = 'none';
+                            elements.headerContent.style.visibility = 'hidden';
+                            elements.headerContent.style.display = 'none';
+                        }
+                    }, 400);
+                    
+                    elements.header.classList.add('collapsed');
+                    updateToggleButtonIcon(true);
+                    console.log('📤 Header 已收合');
+                    
+                } else {
+                    // 展開動畫 - 恢復所有原始樣式
+                    elements.headerContent.style.display = 'flex';
+                    elements.headerContent.style.visibility = 'visible';
+                    elements.headerContent.style.pointerEvents = 'all';
+                    elements.headerContent.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    
+                    // 恢復原始樣式（從 CSS 中讀取）
+                    elements.headerContent.style.height = 'auto';
+                    elements.headerContent.style.minHeight = '60px'; // 對應 CSS 中的 min-height
+                    elements.headerContent.style.maxHeight = 'none';
+                    elements.headerContent.style.paddingTop = '12px';
+                    elements.headerContent.style.paddingBottom = '12px';
+                    elements.headerContent.style.paddingLeft = '16px';
+                    elements.headerContent.style.paddingRight = '16px';
+                    elements.headerContent.style.marginTop = '0px';
+                    elements.headerContent.style.marginBottom = '0px';
+                    elements.headerContent.style.marginLeft = '0px';
+                    elements.headerContent.style.marginRight = '0px';
+                    elements.headerContent.style.borderTopWidth = '';
+                    elements.headerContent.style.borderBottomWidth = '';
+                    elements.headerContent.style.opacity = '1';
+                    elements.headerContent.style.transform = 'scaleY(1)';
+                    
+                    // 計算自然高度並設置動畫
+                    const naturalHeight = elements.headerContent.scrollHeight;
+                    elements.headerContent.style.height = '0px';
+                    elements.headerContent.offsetHeight; // 強制重繪
+                    elements.headerContent.style.height = naturalHeight + 'px';
+                    
+                    // 動畫完成後設置為 auto
+                    setTimeout(() => {
+                        if (!isHeaderCollapsed) { // 確保狀態沒有改變
+                            elements.headerContent.style.height = 'auto';
+                            elements.headerContent.style.overflow = '';
+                            elements.headerContent.style.transition = '';
+                        }
+                    }, 400);
+                    
+                    elements.header.classList.remove('collapsed');
+                    updateToggleButtonIcon(false);
+                    console.log('📥 Header 已展開');
+                }
+            }
+            
+            // 更新切換按鈕圖示
+            function updateToggleButtonIcon(collapsed) {
+                const buttons = [elements.headerToggleBtn, elements.mobileHeaderToggleBtn];
+                
+                buttons.forEach(btn => {
+                    if (btn) {
+                        const icon = btn.querySelector('i[data-lucide]');
+                        if (icon) {
+                            if (collapsed) {
+                                // 收合狀態：顯示向下箭頭（表示可以展開）
+                                btn.classList.add('collapsed');
+                                btn.title = '展開控制面板';
+                                icon.setAttribute('data-lucide', 'chevron-down');
+                            } else {
+                                // 展開狀態：顯示向上箭頭（表示可以收合）
+                                btn.classList.remove('collapsed');
+                                btn.title = '收合控制面板';
+                                icon.setAttribute('data-lucide', 'chevron-up');
+                            }
+                        }
+                    }
+                });
+                
+                // 重新初始化 Lucide 圖標
+                if (typeof lucide !== 'undefined') {
+                    try {
+                        lucide.createIcons();
+                    } catch (e) {
+                        console.warn('⚠️ Lucide 圖標更新失敗:', e);
+                    }
+                }
+            }
+
+            // 🔐 加密檢測和初始化
+            function initializeEncryption() {
+                console.log('🔐 初始化加密系統，狀態:', ENCRYPTION_ENABLED);
+                
+                if (ENCRYPTION_ENABLED) {
+                    // 檢查是否有解密函數
+                    if (typeof window.decryptMemoirData !== 'function') {
+                        console.error('❌ 缺少解密函數');
+                        showError('系統錯誤：缺少解密組件');
+                        return false;
+                    }
+                    
+                    // 檢查是否需要密碼輸入
+                    if (typeof window.requiresPassword === 'boolean' && window.requiresPassword) {
+                        console.log('🔑 需要密碼驗證');
+                        window.showPasswordPrompt();
+                        return false;
+                    }
+                    
+                    // 自動解密（後端密鑰模式）
+                    if (typeof window.autoDecrypt === 'function') {
+                        console.log('🔐 嘗試自動解密');
+                        window.autoDecrypt();
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+
+            // 更新載入狀態
+            function updateLoadingStatus(message) {
+                console.log('🔄 狀態更新:', message);
+                if (elements.loadingStatus) {
+                    elements.loadingStatus.textContent = message;
+                }
+            }
+            
+            // 🔐 顯示錯誤狀態
+            function showError(message) {
+                console.error('❌ 錯誤:', message);
+                
+                if (elements.app) elements.app.classList.add('hidden');
+                if (elements.loadingScreen) elements.loadingScreen.classList.add('hidden');
+                if (elements.passwordModal) elements.passwordModal.classList.add('hidden');
+                
+                document.body.innerHTML += `
+                    <div style="position: fixed; inset: 0; background: linear-gradient(135deg, #1a1a2e, #16213e); 
+                                display: flex; flex-direction: column; align-items: center; justify-content: center; 
+                                z-index: 10000; text-align: center; padding: 20px; color: white;">
+                        <div style="font-size: 80px; margin-bottom: 30px; color: #ef4444;">🔒</div>
+                        <h1 style="font-size: 32px; font-weight: bold; margin-bottom: 20px;">載入失敗</h1>
+                        <p style="font-size: 18px; margin-bottom: 30px; max-width: 600px; line-height: 1.6; color: #9ca3af;">
+                            ${message}
+                        </p>
+                        <button onclick="location.reload()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+                                color: white; border: none; padding: 16px 32px; border-radius: 12px; font-size: 18px; 
+                                font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                            🔄 重新載入
+                        </button>
+                    </div>
+                `;
+            }
+
+            /**
+             * 解除既有跑馬燈（回到單行省略）
+             */
+            function teardownMarquee(el){
+            if(!el) return;
+            // 若 el 本身就是跑馬燈容器
+            if(el.classList && el.classList.contains('marquee')){
+                // 取回原文字
+                const inner = el.querySelector('.marquee__inner');
+                if(inner){
+                // 取回第一段原始內容文字
+                const first = inner.querySelector('.marquee__content');
+                if(first){
+                    el.textContent = first.textContent;
+                }
+                }
+                el.classList.remove('marquee');
+                el.classList.add('truncate-one-line');
+                return;
+            }
+            // 若 el 內有跑馬燈（例如外面再包一層）
+            const marquee = el.querySelector?.('.marquee');
+            if(marquee){
+                const inner = marquee.querySelector('.marquee__inner');
+                const first = inner?.querySelector('.marquee__content');
+                el.textContent = first?.textContent || el.textContent;
+            }
+            el.classList?.add('truncate-one-line');
+            }
+
+            /**
+             * 若文字溢出，將元素轉為跑馬燈。
+             * - 速度依文字寬度自動調整。
+             * - 可重複呼叫（會先清掉舊的狀態再判斷）。
+             */
+            function applyMarqueeIfOverflow(el, {minSpeed = 60, maxSpeed = 140, gap = 48} = {}){
+            if(!el) return;
+
+            // 先把它恢復成純文字 + 省略，才能正確量測
+            teardownMarquee(el);
+
+            // 強制單行省略以測量溢出
+            el.classList.add('truncate-one-line');
+
+            // 量測是否溢出
+            const isOverflow = el.scrollWidth > el.clientWidth;
+            if(!isOverflow) return;  // 不溢出就維持省略（…）
+
+            // 取得原始文字
+            const text = el.textContent;
+
+            // 轉成跑馬燈 DOM
+            el.classList.remove('truncate-one-line');
+            el.classList.add('marquee');
+            el.innerHTML = `
+                <div class="marquee__inner" aria-hidden="false">
+                <span class="marquee__content"></span>
+                <span class="marquee__content"></span>
+                </div>
+            `;
+            const contents = el.querySelectorAll('.marquee__content');
+            contents.forEach(c => c.textContent = text);
+
+            // 重新量測內容寬度（用第一段）
+            const first = el.querySelector('.marquee__content');
+            // 先讓它可量測
+            const temp = document.createElement('span');
+            temp.style.position = 'absolute';
+            temp.style.visibility = 'hidden';
+            temp.style.whiteSpace = 'nowrap';
+            temp.style.font = getComputedStyle(el).font; // 盡量用相同字體
+            temp.textContent = text;
+            document.body.appendChild(temp);
+            const contentWidth = temp.offsetWidth;
+            document.body.removeChild(temp);
+
+            // 依字寬設定速度（字越長，duration 越長）
+            // 每秒移動像素 = speed，duration = 總位移 / speed
+            // 這裡把速度夾在 minSpeed ~ maxSpeed 之間（px/s）
+            const containerWidth = el.clientWidth;
+            const totalTravel = contentWidth + gap + contentWidth + gap; // 兩段 + 間隔做循環
+            // 讓速度隨著文字 / 容器比例遞增（你可微調映射）
+            const ratio = Math.min(3, Math.max(1, contentWidth / containerWidth));
+            const pxPerSecond = Math.max(minSpeed, Math.min(maxSpeed, 60 * ratio));
+            const duration = Math.max(8, Math.min(40, totalTravel / pxPerSecond)); // 限制在 8~40 秒
+
+            const inner = el.querySelector('.marquee__inner');
+            inner.style.setProperty('--gap', `${gap}px`);
+            inner.style.setProperty('--duration', `${duration}s`);
+            }
+
+            // 打字機效果
+            function startTypewriter(text, element, speed = 50) {
+                if (!typewriterEnabled || !text || !element) {
+                    if (element) element.textContent = text || '';
+                    return Promise.resolve();
+                }
+                
+                return new Promise((resolve) => {
+                    typewriterText = text;
+                    typewriterIndex = 0;
+                    isTyping = true;
+                    element.textContent = '';
+                    
+                    // 顯示跳過按鈕
+                    if (elements.skipTypingBtn) {
+                        elements.skipTypingBtn.classList.remove('hidden');
+                    }
+                    
+                    function typeNextChar() {
+                        if (typewriterIndex < typewriterText.length && isTyping) {
+                            element.textContent = typewriterText.slice(0, typewriterIndex + 1) + '|';
+                            typewriterIndex++;
+                            typewriterTimer = setTimeout(typeNextChar, speed);
+                        } else {
+                            element.textContent = typewriterText;
+                            isTyping = false;
+                            if (elements.skipTypingBtn) {
+                                elements.skipTypingBtn.classList.add('hidden');
+                            }
+                            resolve();
+                        }
+                    }
+                    
+                    typeNextChar();
+                });
+            }
+
+            // 切換打字機效果
+            function toggleTypewriter() {
+                typewriterEnabled = !typewriterEnabled;
+                localStorage.setItem(TYPEWRITER_KEY, String(typewriterEnabled));
+                updateTypewriterToggle();
+                if (isTyping) stopTypewriter();
+            }
+
+            function updateTypewriterToggle() {
+                if (elements.typewriterToggle) {
+                    if (typewriterEnabled) {
+                        elements.typewriterToggle.classList.add('active');
+                    } else {
+                        elements.typewriterToggle.classList.remove('active');
+                    }
+                }
+            }
+
+            // ✅ 設定字體大小（狀態 + 儲存 + 套用）
+            function setFontSize(size) {
+                fontSize = size;
+                localStorage.setItem(FONT_SIZE_KEY, fontSize);
+                applyFontSize();
+                updateFontSizeButtons();
+
+                // 字體變了要重算是否溢出
+                applyMarqueeIfOverflow(document.querySelector('.title-text'));
+                applyMarqueeIfOverflow(document.querySelector('.mobile-title'));
+                applyMarqueeIfOverflow(elements.eventTitle);
+            }
+
+            // 切換網格模式
+            function toggleGridMode() {
+                showGrid = !showGrid;
+                updateGridToggle();
+                updateViewMode();
+            }
+
+
+
+            function updateFontSizeButtons() {
+                // 移除所有按鈕的 active 狀態
+                if (elements.fontSmall) elements.fontSmall.classList.toggle('active', fontSize === 'small');
+                if (elements.fontMedium) elements.fontMedium.classList.toggle('active', fontSize === 'medium');
+                if (elements.fontLarge) elements.fontLarge.classList.toggle('active', fontSize === 'large');
+                
+                // 添加當前字體大小按鈕的 active 狀態
+                switch (fontSize) {
+                    case 'small':
+                        if (elements.fontSmall) elements.fontSmall.classList.add('active');
+                        break;
+                    case 'medium':
+                        if (elements.fontMedium) elements.fontMedium.classList.add('active');
+                        break;
+                    case 'large':
+                        if (elements.fontLarge) elements.fontLarge.classList.add('active');
+                        break;
+                }
+            }
+
+            // ✅ 依狀態切換 <html data-font="...">，讓 CSS 變數生效
+            function applyFontSize() {
+                document.documentElement.setAttribute('data-font', fontSize);
+            }
+
+
+
+            function stopTypewriter() {
+                if (typewriterTimer) {
+                    clearTimeout(typewriterTimer);
+                    typewriterTimer = null;
+                }
+                isTyping = false;
+                if (elements.skipTypingBtn) {
+                    elements.skipTypingBtn.classList.add('hidden');
+                }
+                if (elements.eventDescription && typewriterText) {
+                    elements.eventDescription.textContent = typewriterText;
+                }
+            }
+            
+            // 初始化事件監聽器
+            function initEventListeners() {
+                console.log('🔧 初始化事件監聽器');
+
+                // 初始化 Dock
+                initDock();
+                initDraggableSettingsMenu();
+
+                elements.settingsMenu?.classList.remove('visible'); // 進頁面先關閉
+
+                // 保留跑馬燈功能但移除高度調整
+                window.addEventListener('resize', () => {
+                    applyMarqueeIfOverflow(document.querySelector('.title-text'));
+                    applyMarqueeIfOverflow(document.querySelector('.mobile-title'));
+                    applyMarqueeIfOverflow(elements.eventTitle);
+                });
+
+                // ✅ 字體大小按鈕
+                if (elements.fontSmall) {
+                    elements.fontSmall.addEventListener('click', () => setFontSize('small'));
+                }
+                if (elements.fontMedium) {
+                    elements.fontMedium.addEventListener('click', () => setFontSize('medium'));
+                }
+                if (elements.fontLarge) {
+                    elements.fontLarge.addEventListener('click', () => setFontSize('large'));
+                }
+
+                // 設定按鈕
+                if (elements.settingsBtn) {
+                    elements.settingsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleSettingsMenu();
+                    });
+                }
+                
+                // 點擊其他地方關閉設定選單
+                document.addEventListener('click', (e) => {
+                    const clickInsideDock = elements.quickDock?.contains(e.target);
+                    const clickOnToggles =
+                        elements.headerToggleBtn?.contains(e.target) ||
+                        elements.mobileHeaderToggleBtn?.contains(e.target);
+
+                    // ✅ 關設定選單：只有在「不是點在選單內」且「不是點在兩個設定按鈕」時才關
+                    const clickInsideSettings = elements.settingsMenu?.contains(e.target);
+                    const clickOnAnySettingsBtn =
+                        elements.settingsBtn?.contains(e.target) || // header 的齒輪
+                        elements.quickSettingsBtn?.contains(e.target); // Dock 的齒輪
+
+                    if (!clickInsideSettings && !clickOnAnySettingsBtn && elements.settingsMenu) {
+                        elements.settingsMenu.classList.remove('visible');
+                    }
+
+                    // ✅ 關 Dock：點擊 Dock 外且不是切換鈕才關
+                    if (!clickInsideDock && !clickOnToggles && isDockOpen) {
+                        isDockOpen = false;
+                        localStorage.setItem(DOCK_OPEN_KEY, 'false');
+                        applyDockState(true);
+                        updateDockToggleIcon(true);
+                    }
+                });
+
+                // 網格切換
+                if (elements.gridToggle) {
+                    elements.gridToggle.addEventListener('click', toggleGridMode);
+                }
+                
+                // 字幕切換
+                if (elements.subtitleToggle) {
+                    elements.subtitleToggle.addEventListener('click', toggleSubtitles);
+                }
+                
+                // 時間軸按鈕
+                if (elements.timelineBtn) {
+                    elements.timelineBtn.addEventListener('click', showTimeline);
+                }
+                
+                // 說明按鈕
+                if (elements.helpBtn) {
+                    elements.helpBtn.addEventListener('click', showHelp);
+                }
+                
+                // 跳過打字效果
+                if (elements.skipTypingBtn) {
+                    elements.skipTypingBtn.addEventListener('click', skipTyping);
+                }
+                
+                // 導航按鈕
+                if (elements.prevEventBtn) {
+                    elements.prevEventBtn.addEventListener('click', () => {
+                        if (currentEventIndex > 0) {
+                            goToEvent(currentEventIndex - 1);
+                        }
+                    });
+                }
+                
+                if (elements.nextEventBtn) {
+                    elements.nextEventBtn.addEventListener('click', () => {
+                        if (MEMOIR_DATA && currentEventIndex < MEMOIR_DATA.events.length - 1) {
+                            goToEvent(currentEventIndex + 1);
+                        }
+                    });
+                }
+                
+                if (elements.prevMediaBtn) {
+                    elements.prevMediaBtn.addEventListener('click', () => {
+                        if (currentMediaIndex > 0) {
+                            goToMedia(currentMediaIndex - 1);
+                        }
+                    });
+                }
+                
+                if (elements.nextMediaBtn) {
+                    elements.nextMediaBtn.addEventListener('click', () => {
+                        const currentEvent = getCurrentEvent();
+                        if (currentEvent && currentMediaIndex < currentEvent.media.length - 1) {
+                            goToMedia(currentMediaIndex + 1);
+                        }
+                    });
+                }
+                
+                // 面板關閉
+                if (elements.timelineClose) {
+                    elements.timelineClose.addEventListener('click', hideTimeline);
+                }
+                
+                if (elements.helpClose) {
+                    elements.helpClose.addEventListener('click', hideHelp);
+                }
+                
+                if (elements.mediaViewerClose) {
+                    elements.mediaViewerClose.addEventListener('click', hideMediaViewer);
+                }
+                
+                // 點擊檢視器背景關閉
+                if (elements.mediaViewer) {
+                    elements.mediaViewer.addEventListener('click', (e) => {
+                        if (e.target === elements.mediaViewer) {
+                            hideMediaViewer();
+                        }
+                    });
+                }
+
+                // 打字機效果切換
+                if (elements.typewriterToggle) {
+                    elements.typewriterToggle.addEventListener('click', () => {
+                        // 切換狀態
+                        toggleTypewriter();
+
+                        // 立即以目前事件的描述刷新顯示（關→開時重跑打字；開→關時顯示完整文字）
+                        const ev = getCurrentEvent();
+                        if (ev && elements.eventDescription && showSubtitles) {
+                            // 先停止（確保游標與計時清乾淨）
+                            stopTypewriter();
+                            if (typewriterEnabled) {
+                                // 重新跑字
+                                startTypewriter(ev.description, elements.eventDescription);
+                            } else {
+                                // 直接顯示完整文字
+                                elements.eventDescription.textContent = ev.description || '';
+                            }
+                        }
+                    });
+                }
+
+                // 鍵盤控制
+                document.addEventListener('keydown', handleKeyPress);
+                
+                // 觸控滑動
+                initTouchSwipe();
+            }
+            
+            // 🔐 解密成功回調
+            window.onDecryptionSuccess = function(decryptedData) {
+                console.log('✅ 解密成功');
+                MEMOIR_DATA = decryptedData;
+                isUnlocked = true;
+
+                if (!window.__APPROVAL__?.ok) {
+                    showBlocked('未通過審核，無法載入內容。');
+                    return;
+                }
+                
+                // 隱藏密碼模態框
+                if (elements.passwordModal) {
+                    elements.passwordModal.classList.add('hidden');
+                }
+                
+                // 初始化應用程式
+                setTimeout(() => {
+                    initializeApp();
+                }, 500);
+            };
+            
+            // 🔐 解密失敗回調
+            window.onDecryptionError = function(errorMessage) {
+                console.error('❌ 解密失敗:', errorMessage);
+                
+                if (elements.passwordModal && !elements.passwordModal.classList.contains('hidden')) {
+                    // 顯示密碼錯誤
+                    window.showPasswordPrompt(errorMessage || '密碼錯誤，請重新輸入');
+                } else {
+                    showError(`解密失敗: ${errorMessage || '未知錯誤'}`);
+                }
+            };
+
+            // 切換設定選單
+            function toggleSettingsMenu() {
+            if (!elements.settingsMenu) return;
+            const menu = elements.settingsMenu;
+
+            if (!settingsDragReady) initDraggableSettingsMenu(); // ⬅️ 懶載入
+
+            menu.classList.add('floating');
+            const willOpen = !menu.classList.contains('visible');
+            menu.classList.toggle('visible');
+
+            if (willOpen && !localStorage.getItem(SETTINGS_POS_KEY)) {
+                window.positionSettingsNearButton && window.positionSettingsNearButton();
+            }
+            }
+            
+            function updateGridToggle() {
+                if (elements.gridToggle) {
+                    if (showGrid) {
+                        elements.gridToggle.classList.add('active');
+                    } else {
+                        elements.gridToggle.classList.remove('active');
+                    }
+                }
+            }
+            
+            function updateViewMode() {
+                if (showGrid) {
+                    if (elements.mediaCarousel) elements.mediaCarousel.style.display = 'none';
+                    if (elements.mediaGrid) {
+                        elements.mediaGrid.style.display = 'block';
+                        elements.mediaGrid.classList.remove('hidden');
+                    }
+                    if (elements.mainContent) elements.mainContent.classList.add('grid-mode');
+                    renderGridView();
+                } else {
+                    if (elements.mediaCarousel) elements.mediaCarousel.style.display = 'flex';
+                    if (elements.mediaGrid) {
+                        elements.mediaGrid.style.display = 'none';
+                        elements.mediaGrid.classList.add('hidden');
+                    }
+                    if (elements.mainContent) elements.mainContent.classList.remove('grid-mode');
+                }
+            }
+            
+            // 切換字幕
+            function toggleSubtitles() {
+                showSubtitles = !showSubtitles;
+                updateSubtitleToggle();
+                updateSubtitleVisibility();
+            }
+            
+            function updateSubtitleToggle() {
+                if (elements.subtitleToggle) {
+                    if (showSubtitles) {
+                        elements.subtitleToggle.classList.add('active');
+                    } else {
+                        elements.subtitleToggle.classList.remove('active');
+                    }
+                }
+            }
+            
+            function updateSubtitleVisibility() {
+                if (elements.eventDescription) {
+                    elements.eventDescription.style.display = showSubtitles ? 'block' : 'none';
+                }
+            }
+            
+            // 跳過打字效果
+            function skipTyping() {
+                stopTypewriter();
+            }
+            
+            // 顯示/隱藏面板
+            function showTimeline() {
+                renderTimeline();
+                if (elements.timelinePanel) {
+                    elements.timelinePanel.classList.add('visible');
+                }
+            }
+            
+            function hideTimeline() {
+                if (elements.timelinePanel) {
+                    elements.timelinePanel.classList.remove('visible');
+                }
+            }
+            
+            function showHelp() {
+                if (elements.helpPanel) {
+                    elements.helpPanel.classList.add('visible');
+                }
+            }
+            
+            function hideHelp() {
+                if (elements.helpPanel) {
+                    elements.helpPanel.classList.remove('visible');
+                }
+            }
+            
+            function showMediaViewer(mediaSrc, mediaType) {
+                if (elements.mediaViewerContent) {
+                    elements.mediaViewerContent.innerHTML = '';
+                    
+                    let mediaElement;
+                    if (mediaType === 'image') {
+                        mediaElement = document.createElement('img');
+                        mediaElement.src = mediaSrc;
+                        mediaElement.alt = 'Full screen image';
+                    } else if (mediaType === 'video') {
+                        mediaElement = document.createElement('video');
+                        mediaElement.src = mediaSrc;
+                        mediaElement.controls = true;
+                        mediaElement.autoplay = false;
+                    }
+                    
+                    if (mediaElement) {
+                        elements.mediaViewerContent.appendChild(mediaElement);
+                    }
+                }
+                
+                if (elements.mediaViewer) {
+                    elements.mediaViewer.classList.add('visible');
+                }
+            }
+            
+            function hideMediaViewer() {
+                if (elements.mediaViewer) {
+                    elements.mediaViewer.classList.remove('visible');
+                }
+            }
+            
+            // 獲取當前事件
+            function getCurrentEvent() {
+                if (!MEMOIR_DATA || !MEMOIR_DATA.events) return null;
+                const sortedEvents = getSortedEvents();
+                return sortedEvents[currentEventIndex] || null;
+            }
+            
+            function getSortedEvents() {
+                if (!MEMOIR_DATA || !MEMOIR_DATA.events) return [];
+                return [...MEMOIR_DATA.events].sort((a, b) => 
+                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
+            }
+            
+            // 事件導航
+            function goToEvent(eventIndex) {
+                if (!MEMOIR_DATA || !MEMOIR_DATA.events) return;
+                
+                const sortedEvents = getSortedEvents();
+                if (eventIndex < 0 || eventIndex >= sortedEvents.length || eventIndex === currentEventIndex) return;
+                
+                console.log(`📅 切換到事件: ${eventIndex + 1}/${sortedEvents.length}`);
+                
+                // 開始轉場動畫
+                if (elements.subtitleArea) elements.subtitleArea.classList.add('transitioning');
+                if (elements.mainContent) elements.mainContent.classList.add('transitioning');
+                
+                isTransitioning = true;
+                stopTypewriter();
+                
+                setTimeout(() => {
+                    currentEventIndex = eventIndex;
+                    currentMediaIndex = 0;
+                    loadEvent();
+                    
+                    // 更新進度指示器
+                    renderProgressIndicator();
+                    
+                    setTimeout(() => {
+                        if (elements.subtitleArea) elements.subtitleArea.classList.remove('transitioning');
+                        if (elements.mainContent) elements.mainContent.classList.remove('transitioning');
+                        isTransitioning = false;
+                    }, 300);
+                }, 150);
+            }
+            
+            // 媒體導航
+            function goToMedia(mediaIndex) {
+                const currentEvent = getCurrentEvent();
+                if (!currentEvent || !currentEvent.media) return;
+                
+                if (mediaIndex < 0 || mediaIndex >= currentEvent.media.length || mediaIndex === currentMediaIndex) return;
+                
+                console.log(`🎬 切換到媒體: ${mediaIndex + 1}/${currentEvent.media.length}`);
+                
+                currentMediaIndex = mediaIndex;
+                displayMedia();
+                updateMediaNavigation();
+                renderThumbnails();
+                
+                if (showGrid) {
+                    renderGridView();
+                }
+            }
+            
+            // 載入事件
+            function loadEvent() {
+                const currentEvent = getCurrentEvent();
+                if (!currentEvent) {
+                    console.warn('⚠️ 沒有當前事件');
+                    return;
+                }
+                
+                console.log(`📅 載入事件: ${currentEvent.title}`);
+                
+                // 更新事件信息
+                updateEventInfo(currentEvent);
+                updateEventNavigation();
+                
+                // 更新進度指示器
+                renderProgressIndicator();
+                
+                // 載入媒體
+                displayMedia();
+                updateMediaNavigation();
+                renderThumbnails();
+                
+                if (showGrid) {
+                    renderGridView();
+                }
+            }
+            
+            // 更新事件信息
+            function updateEventInfo(event) {
+                if (elements.currentEventNum) {
+                    elements.currentEventNum.textContent = currentEventIndex + 1;
+                }
+                if (elements.totalEvents) {
+                    elements.totalEvents.textContent = getSortedEvents().length;
+                }
+                if (elements.mediaCount) {
+                    elements.mediaCount.textContent = event.media ? event.media.length : 0;
+                }
+                
+                // 更新日期
+                if (elements.eventDate) {
+                    try {
+                        const eventDate = new Date(event.date).toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        elements.eventDate.textContent = eventDate;
+                    } catch (e) {
+                        elements.eventDate.textContent = event.date;
+                    }
+                }
+                
+                // 更新標題
+                if (elements.eventTitle) {
+                    elements.eventTitle.textContent = event.title;
+                }
+                
+                // 跑馬燈：每日文章標題
+                applyMarqueeIfOverflow(elements.eventTitle);
+
+                // 更新描述（使用打字機效果）
+                if (elements.eventDescription && showSubtitles) {
+                    startTypewriter(event.description, elements.eventDescription);
+                }
+            }
+            
+            // 更新事件導航按鈕
+            function updateEventNavigation() {
+                const totalEvents = getSortedEvents().length;
+                
+                if (elements.prevEventBtn) {
+                    if (currentEventIndex === 0) {
+                        elements.prevEventBtn.classList.add('disabled');
+                    } else {
+                        elements.prevEventBtn.classList.remove('disabled');
+                    }
+                }
+                
+                if (elements.nextEventBtn) {
+                    if (currentEventIndex === totalEvents - 1) {
+                        elements.nextEventBtn.classList.add('disabled');
+                    } else {
+                        elements.nextEventBtn.classList.remove('disabled');
+                    }
+                }
+            }
+            
+            // 顯示媒體
+            function displayMedia() {
+                const currentEvent = getCurrentEvent();
+                if (!currentEvent || !currentEvent.media || currentEvent.media.length === 0) {
+                    showNoMediaMessage();
+                    return;
+                }
+
+                const media = currentEvent.media[currentMediaIndex];
+                if (!media) {
+                    showNoMediaMessage();
+                    return;
+                }
+
+                console.log('🎬 顯示媒體:', media);
+
+                if (elements.mediaDisplay) {
+                    elements.mediaDisplay.innerHTML = '';
+
+                    try {
+                        let mediaElement;
+
+                        if (media.type === 'image' || media.media_type === 'image') {
+                            mediaElement = document.createElement('img');
+                            mediaElement.style.maxWidth = '100%';
+                            mediaElement.style.maxHeight = '100%';
+                            mediaElement.style.objectFit = 'contain';
+                            mediaElement.style.cursor = 'pointer';
+                            mediaElement.alt = media.originalName || media.filename || 'Image';
+
+                            mediaElement.onclick = () => {
+                                showMediaViewer(getMediaSrc(media), 'image');
+                            };
+
+                            mediaElement.onload = () => {
+                                console.log('✅ 圖片載入成功');
+                            };
+
+                            mediaElement.onerror = () => {
+                                console.error('❌ 圖片載入失敗:', media.path);
+                                showMediaError('圖片載入失敗');
+                            };
+
+                        } else if (media.type === 'video' || media.media_type === 'video') {
+                            if (media.isUrl && (media.url?.includes('youtube.com') || media.url?.includes('youtu.be'))) {
+                                // YouTube 影片 - 使用響應式容器
+                                const videoId = extractYouTubeId(media.url);
+                                if (videoId) {
+                                    // 創建響應式容器
+                                    const youtubeContainer = document.createElement('div');
+                                    youtubeContainer.className = 'youtube-container';
+                                    
+                                    const iframe = document.createElement('iframe');
+                                    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+                                    iframe.setAttribute('allowfullscreen', '');
+                                    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                                    iframe.style.border = 'none';
+                                    
+                                    youtubeContainer.appendChild(iframe);
+                                    elements.mediaDisplay.appendChild(youtubeContainer);
+                                    
+                                    console.log('✅ YouTube 影片嵌入成功');
+                                    return;
+                                }
+                            } else {
+                                // 一般影片
+                                mediaElement = document.createElement('video');
+                                mediaElement.style.maxWidth = '100%';
+                                mediaElement.style.maxHeight = '100%';
+                                mediaElement.style.objectFit = 'contain';
+                                mediaElement.style.cursor = 'pointer';
+                                mediaElement.controls = true;
+                                mediaElement.muted = true;
+                                mediaElement.playsInline = true;
+
+                                mediaElement.onclick = () => {
+                                    showMediaViewer(getMediaSrc(media), 'video');
+                                };
+
+                                mediaElement.onloadeddata = () => {
+                                    console.log('✅ 影片載入成功');
+                                };
+
+                                mediaElement.onerror = () => {
+                                    console.error('❌ 影片載入失敗:', media.path);
+                                    showMediaError('影片載入失敗');
+                                };
+                            }
+                        }
+
+                        if (mediaElement) {
+                            mediaElement.src = getMediaSrc(media);
+                            elements.mediaDisplay.appendChild(mediaElement);
+                        }
+
+                    } catch (error) {
+                        console.error('❌ 媒體顯示錯誤:', error);
+                        showMediaError(`媒體顯示錯誤: ${error.message}`);
+                    }
+                }
+            }
+            
+            // 獲取媒體源
+            function getMediaSrc(media) {
+                if (media.isUrl || media.is_url) {
+                    return media.url || media.path;
+                } else {
+                    // 本地媒體檔案
+                    let mediaSrc = media.path;
+                    
+                    // 確保路徑格式正確
+                    if (!mediaSrc.startsWith('./') && !mediaSrc.startsWith('http')) {
+                        if (mediaSrc.startsWith('media/')) {
+                            mediaSrc = './' + mediaSrc;
+                        } else {
+                            mediaSrc = './media/' + (mediaSrc.split('/').pop() || mediaSrc);
+                        }
+                    }
+                    
+                    return mediaSrc;
+                }
+            }
+            
+            // 提取 YouTube ID
+            function extractYouTubeId(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            }
+            
+            // 顯示媒體錯誤
+            function showMediaError(message) {
+                if (elements.mediaDisplay) {
+                    elements.mediaDisplay.innerHTML = `
+                        <div style="text-align: center; color: #ef4444; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                            <div style="font-size: 16px;">${message}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 顯示無媒體訊息
+            function showNoMediaMessage() {
+                if (elements.mediaDisplay) {
+                    const icon = ENCRYPTION_ENABLED ? '🔒' : '📷';
+                    elements.mediaDisplay.innerHTML = `
+                        <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">${icon}</div>
+                            <div style="font-size: 16px;">此時間節點沒有媒體內容</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 更新媒體導航 - 修改顯示邏輯
+            function updateMediaNavigation() {
+                const currentEvent = getCurrentEvent();
+                const mediaCount = currentEvent?.media?.length || 0;
+                
+                // 更新媒體計數器
+                if (elements.mediaCounterOverlay) {
+                    if (mediaCount > 0) {
+                        elements.mediaCounterOverlay.textContent = `${currentMediaIndex + 1} / ${mediaCount}`;
+                        // 修改：只有在多於1個媒體時才顯示計數器
+                        elements.mediaCounterOverlay.style.display = mediaCount > 1 ? 'block' : 'none';
+                    } else {
+                        elements.mediaCounterOverlay.style.display = 'none';
+                    }
+                }
+                
+                // 更新導航按鈕
+                if (elements.prevMediaBtn) {
+                    if (currentMediaIndex === 0 || mediaCount <= 1) {
+                        elements.prevMediaBtn.classList.add('disabled');
+                    } else {
+                        elements.prevMediaBtn.classList.remove('disabled');
+                    }
+                    // 修改：只有在多於1個媒體時才顯示按鈕
+                    elements.prevMediaBtn.style.display = mediaCount > 1 ? 'flex' : 'none';
+                }
+                
+                if (elements.nextMediaBtn) {
+                    if (currentMediaIndex === mediaCount - 1 || mediaCount <= 1) {
+                        elements.nextMediaBtn.classList.add('disabled');
+                    } else {
+                        elements.nextMediaBtn.classList.remove('disabled');
+                    }
+                    // 修改：只有在多於1個媒體時才顯示按鈕
+                    elements.nextMediaBtn.style.display = mediaCount > 1 ? 'flex' : 'none';
+                }
+            }
+            
+            // 渲染縮圖 - 修改為總是顯示，包含單一媒體
+            function renderThumbnails() {
+                const currentEvent = getCurrentEvent();
+                if (!currentEvent || !elements.thumbnailsScroll) return;
+
+                elements.thumbnailsScroll.innerHTML = '';
+
+                if (!currentEvent.media || currentEvent.media.length === 0) {
+                    return;
+                }
+
+                currentEvent.media.forEach((media, index) => {
+                    const thumbnailItem = document.createElement('div');
+                    thumbnailItem.className = `thumbnail-item ${index === currentMediaIndex ? 'active' : ''}`;
+                    thumbnailItem.onclick = () => goToMedia(index);
+
+                    const thumbnailImage = document.createElement('img');
+                    thumbnailImage.className = 'thumbnail-image';
+                    
+                    // 檢查是否為 YouTube 影片，使用 YouTube 縮圖
+                    if ((media.type === 'video' || media.media_type === 'video') && 
+                        media.isUrl && (media.url?.includes('youtube.com') || media.url?.includes('youtu.be'))) {
+                        
+                        const videoId = extractYouTubeId(media.url);
+                        if (videoId) {
+                            // 使用 YouTube 高品質縮圖
+                            thumbnailImage.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                            thumbnailImage.alt = media.originalName || `YouTube Video ${index + 1}`;
+                            
+                            // 備用縮圖（防止高品質縮圖載入失敗）
+                            thumbnailImage.onerror = () => {
+                                thumbnailImage.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                                thumbnailImage.onerror = () => {
+                                    // 最後備用方案
+                                    thumbnailImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjZmYwMDAwIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMjQiPuWwul08L3RleHQ+Cjwvc3ZnPgo=';
+                                };
+                            };
+                        }
+                    } else {
+                        // 非 YouTube 影片，使用原來的邏輯
+                        thumbnailImage.src = getMediaSrc(media);
+                        thumbnailImage.alt = media.originalName || `Media ${index + 1}`;
+                        
+                        thumbnailImage.onerror = () => {
+                            thumbnailImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjMzc0MTUxIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzlDQTNBRiIgZm9udC1zaXplPSIyNCI+8J+TtwopPC90ZXh0Pgo8L3N2Zz4K';
+                        };
+                    }
+
+                    thumbnailItem.appendChild(thumbnailImage);
+
+                    // 影片圖標
+                    if (media.type === 'video' || media.media_type === 'video') {
+                        const videoIcon = document.createElement('div');
+                        videoIcon.className = 'thumbnail-video-icon';
+                        videoIcon.innerHTML = '<i data-lucide="play" style="width: 8px; height: 8px;"></i>';
+                        thumbnailItem.appendChild(videoIcon);
+                    }
+
+                    // 索引
+                    const thumbnailIndex = document.createElement('div');
+                    thumbnailIndex.className = 'thumbnail-index';
+                    thumbnailIndex.textContent = index + 1;
+                    thumbnailItem.appendChild(thumbnailIndex);
+
+                    elements.thumbnailsScroll.appendChild(thumbnailItem);
+                });
+
+                // 重新初始化圖標
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            // 渲染網格視圖
+            function renderGridView() {
+                const currentEvent = getCurrentEvent();
+                if (!currentEvent || !elements.gridContainer) return;
+
+                elements.gridContainer.innerHTML = '';
+
+                if (!currentEvent.media || currentEvent.media.length === 0) {
+                    const icon = ENCRYPTION_ENABLED ? '🔒' : '📷';
+                    elements.gridContainer.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">${icon}</div>
+                            <div>此時間節點沒有媒體內容</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentEvent.media.forEach((media, index) => {
+                    const gridItem = document.createElement('div');
+                    gridItem.className = `grid-item ${index === currentMediaIndex ? 'active' : ''}`;
+
+                    const gridContent = document.createElement('div');
+                    gridContent.className = 'grid-item-content';
+
+                    // 檢查是否為 YouTube 影片
+                    if ((media.type === 'video' || media.media_type === 'video') && 
+                        media.isUrl && (media.url?.includes('youtube.com') || media.url?.includes('youtu.be'))) {
+                        
+                        const videoId = extractYouTubeId(media.url);
+                        if (videoId) {
+                            const mediaElement = document.createElement('img');
+                            mediaElement.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                            mediaElement.alt = media.originalName || `YouTube Video ${index + 1}`;
+                            
+                            mediaElement.onerror = () => {
+                                mediaElement.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                            };
+                            
+                            gridContent.appendChild(mediaElement);
+                        }
+                    } else {
+                        // 非 YouTube 內容
+                        const mediaElement = document.createElement('img');
+                        mediaElement.src = getMediaSrc(media);
+                        mediaElement.alt = media.originalName || `Media ${index + 1}`;
+
+                        mediaElement.onerror = () => {
+                            mediaElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzc0MTUxIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LXNpemU9IjQ4Ij7wn5O3PC90ZXh0Pgo8L3N2Zz4K';
+                        };
+                        
+                        gridContent.appendChild(mediaElement);
+                    }
+
+                    gridItem.appendChild(gridContent);
+
+                    // 媒體信息
+                    const gridInfo = document.createElement('div');
+                    gridInfo.className = 'grid-item-info';
+
+                    const gridName = document.createElement('div');
+                    gridName.className = 'grid-item-name';
+                    gridName.textContent = media.originalName || media.filename || `媒體 ${index + 1}`;
+                    gridInfo.appendChild(gridName);
+
+                    gridItem.appendChild(gridInfo);
+
+                    // 影片圖標
+                    if (media.type === 'video' || media.media_type === 'video') {
+                        const videoIcon = document.createElement('div');
+                        videoIcon.style.cssText = `
+                            position: absolute;
+                            top: 8px;
+                            right: 8px;
+                            background: rgba(17, 24, 39, 0.8);
+                            border: 1px solid rgba(107, 114, 128, 0.5);
+                            border-radius: 50%;
+                            padding: 4px;
+                            color: white;
+                        `;
+                        videoIcon.innerHTML = '<i data-lucide="play" style="width: 12px; height: 12px;"></i>';
+                        gridItem.appendChild(videoIcon);
+                    }
+
+                    // 事件監聽
+                    gridItem.onclick = () => goToMedia(index);
+                    gridItem.ondblclick = () => {
+                        if ((media.type === 'video' || media.media_type === 'video') && 
+                            media.isUrl && (media.url?.includes('youtube.com') || media.url?.includes('youtu.be'))) {
+                            // YouTube 影片直接在當前視圖播放，不用全螢幕檢視器
+                            goToMedia(index);
+                        } else {
+                            showMediaViewer(getMediaSrc(media), media.type || media.media_type || 'image');
+                        }
+                    };
+
+                    elements.gridContainer.appendChild(gridItem);
+                });
+
+                // 重新初始化圖標
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+            
+            // 渲染時間軸
+            function renderTimeline() {
+            if (!MEMOIR_DATA || !elements.timelineScroll) return;
+
+            const sortedEvents = getSortedEvents();
+            elements.timelineScroll.innerHTML = '<div class="timeline-line"></div>';
+
+            sortedEvents.forEach((event, index) => {
+                const item = document.createElement('div');
+                item.className = `timeline-item ${index === currentEventIndex ? 'active' : ''}`;
+
+                const node = document.createElement('div');
+                node.className = 'timeline-node';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'timeline-event';
+
+                const content = document.createElement('div');
+                content.className = 'timeline-event-content';
+
+                const header = document.createElement('div');
+                header.className = 'timeline-event-header';
+
+                const dateEl = document.createElement('div');
+                dateEl.className = 'timeline-event-date';
+                dateEl.textContent = new Date(event.date).toLocaleDateString('zh-TW');
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'timeline-event-title';
+                titleEl.textContent = event.title;
+
+                const descEl = document.createElement('div');
+                descEl.className = 'timeline-event-description';
+                descEl.textContent = event.description;
+
+                header.append(dateEl, titleEl);
+                content.append(header, descEl);
+                wrapper.appendChild(content);
+
+                item.append(node, wrapper);
+                item.onclick = () => { goToEvent(index); hideTimeline(); };
+
+                elements.timelineScroll.appendChild(item);
+            });
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            // 鍵盤控制
+            function handleKeyPress(e) {
+                // 如果有面板開啟，只處理 ESC 鍵
+                if (elements.timelinePanel?.classList.contains('visible') || 
+                    elements.helpPanel?.classList.contains('visible') || 
+                    elements.mediaViewer?.classList.contains('visible')) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        hideTimeline();
+                        hideHelp();
+                        hideMediaViewer();
+                    }
+                    return;
+                }
+
+                // 常見縮放快捷鍵
+                if (!(elements.timelinePanel?.classList.contains('visible') ||
+                    elements.helpPanel?.classList.contains('visible') ||
+                    elements.mediaViewer?.classList.contains('visible'))) {
+                    const withCtrl = (e.ctrlKey || e.metaKey);
+                    if (withCtrl && (e.key === '+' || e.key === '=')) {
+                        e.preventDefault();
+                        setFontSize(fontSize === 'small' ? 'medium' : 'large');
+                        return;
+                    }
+                    if (withCtrl && e.key === '-') {
+                        e.preventDefault();
+                        setFontSize(fontSize === 'large' ? 'medium' : 'small');
+                        return;
+                    }
+                    if (withCtrl && e.key === '0') {
+                        e.preventDefault();
+                        setFontSize('medium');
+                        return;
+                    }
+                }
+
+                switch (e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (currentEventIndex > 0) {
+                            goToEvent(currentEventIndex - 1);
+                        }
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (MEMOIR_DATA && currentEventIndex < getSortedEvents().length - 1) {
+                            goToEvent(currentEventIndex + 1);
+                        }
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        if (MEMOIR_DATA && MEMOIR_DATA.events) {
+                            goToEvent(0);
+                        }
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        if (MEMOIR_DATA && MEMOIR_DATA.events) {
+                            goToEvent(getSortedEvents().length - 1);
+                        }
+                        break;
+                    case 'g':
+                    case 'G':
+                        e.preventDefault();
+                        toggleGridMode();
+                        break;
+                    case 't':
+                    case 'T':
+                        e.preventDefault();
+                        showTimeline();
+                        break;
+                    case 'h':
+                    case 'H':
+                    case '?':
+                        e.preventDefault();
+                        showHelp();
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        if (showGrid) {
+                            toggleGridMode();
+                        }
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        // 播放/暫停影片
+                        const video = elements.mediaDisplay?.querySelector('video');
+                        if (video) {
+                            if (video.paused) {
+                                video.play();
+                            } else {
+                                video.pause();
+                            }
+                        }
+                        break;
+                }
+            }
+
+            // 觸控滑動支援
+            function initTouchSwipe() {
+                let touchStartX = 0;
+                let touchEndX = 0;
+                const minSwipeDistance = 50;
+                
+                const swipeArea = elements.subtitleArea || document.body;
+                
+                swipeArea.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+                
+                swipeArea.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].clientX;
+                    const deltaX = touchEndX - touchStartX;
+                    
+                    if (Math.abs(deltaX) > minSwipeDistance) {
+                        if (deltaX > 0 && currentEventIndex > 0) {
+                            goToEvent(currentEventIndex - 1);
+                        } else if (deltaX < 0 && MEMOIR_DATA && currentEventIndex < getSortedEvents().length - 1) {
+                            goToEvent(currentEventIndex + 1);
+                        }
+                    }
+                }, { passive: true });
+            }
+            
+            // 初始化應用程式
+            function initializeApp() {
+                console.log('🚀 初始化回憶錄應用程式');
+                
+                try {
+                    // 檢查數據
+                    if (!MEMOIR_DATA) {
+                        if (window.MEMOIR_DATA) {
+                            MEMOIR_DATA = window.MEMOIR_DATA;
+                        } else {
+                            throw new Error('MEMOIR_DATA 未定義');
+                        }
+                    }
+                    
+                    console.log('📊 載入的回憶錄數據:', {
+                        name: MEMOIR_DATA.chineseName,
+                        events: MEMOIR_DATA.events ? MEMOIR_DATA.events.length : 0,
+                        encrypted: ENCRYPTION_ENABLED
+                    });
+                    
+                    // 顯示主應用程式
+                    if (elements.app) elements.app.classList.remove('hidden');
+                    
+                    // 初始化 UI
+                    initEventListeners();
+                    updateGridToggle();
+                    updateSubtitleToggle();
+                    updateSubtitleVisibility();
+                    updateTypewriterToggle();
+                    updateFontSizeButtons();
+                    applyFontSize();
+
+                    // 跑馬燈：回憶錄名稱（桌機 + 手機）
+                    const memoirTitleDesktop = document.querySelector('.title-text');
+                    const memoirTitleMobile  = document.querySelector('.mobile-title');
+                    applyMarqueeIfOverflow(memoirTitleDesktop);
+                    applyMarqueeIfOverflow(memoirTitleMobile);
+
+                    // 載入第一個事件
+                    if (MEMOIR_DATA.events && MEMOIR_DATA.events.length > 0) {
+                        loadEvent();
+                        // 初始化進度指示器
+                        renderProgressIndicator();
+                    } else {
+                        console.log('📝 沒有事件數據');
+                        showEmptyState();
+                    }
+                    
+                    // 隱藏載入畫面
+                    setTimeout(() => {
+                        if (elements.loadingScreen) {
+                            elements.loadingScreen.classList.add('hidden');
+                        }
+                    }, 1000);
+                    
+                    console.log('✅ 回憶錄應用程式初始化完成');
+
+                    (function sendView(){
+                        const memoirId = document.querySelector('meta[name="memoir-id"]')?.content || '';
+                        const backend  = document.querySelector('meta[name="backend-url"]')?.content || '';
+                        const payload  = {
+                            memoir_id: memoirId,
+                            page_path: location.pathname,
+                            repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
+                            approval_token: window.__APPROVAL__?.token || null, // ← 一起帶上，方便關聯
+                        };
+                        if (backend) {
+                            fetch(`${backend}/api/admin/track/view`, {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify(payload)
+                            }).catch(()=>{});
+                        }
+                    })();
+                } catch (error) {
+                    console.error('❌ 應用程式初始化失敗:', error);
+                    showError(`應用程式初始化失敗: ${error.message}`);
+                }
+            }
+            
+            // 顯示空狀態
+            function showEmptyState() {
+                if (elements.mediaDisplay) {
+                    const status = ENCRYPTION_ENABLED ? '加密回憶錄已載入' : '回憶錄已載入';
+                    elements.mediaDisplay.innerHTML = `
+                        <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                            <div style="font-size: 18px; margin-bottom: 10px;">${status}</div>
+                            <div style="font-size: 14px;">但暫時沒有時間節點內容</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 主要初始化流程
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🔒 MemoirFlow 加密回憶錄載入中...');
+                
+                updateLoadingStatus('正在準備加密系統...');
+                
+                // 初始化 Lucide 圖標
+                if (typeof lucide !== 'undefined') {
+                    try {
+                        lucide.createIcons();
+                    } catch (e) {
+                        console.warn('⚠️ Lucide 圖標初始化失敗:', e);
+                    }
+                }
+                
+                // 延遲啟動
+                setTimeout(async () => {
+                    updateLoadingStatus('正在檢查加密狀態...');
+                    setTimeout(async () => {
+                    console.log('🔐 開始初始化加密系統');
+
+                    // ✅ 一律先核可：沒通過就停止（封鎖畫面已顯示）
+                    const ok = await (window.__preInitApproval__?.() ?? true);
+                    if (!ok) return;
+
+                    if (initializeEncryption()) {
+                        initializeApp();
+                    }
+                    }, 800);
+                }, 1500);
+            });
+            
+            // 錯誤處理
+            window.addEventListener('error', function(e) {
+                console.error('❌ 頁面錯誤:', e.error);
+                if (!elements.app || elements.app.classList.contains('hidden')) {
+                    showError(`系統錯誤: ${e.error?.message || '未知錯誤'}`);
+                }
+            });
+            
+            window.addEventListener('unhandledrejection', function(e) {
+                console.error('❌ Promise 錯誤:', e.reason);
+                if (!elements.app || elements.app.classList.contains('hidden')) {
+                    showError(`載入錯誤: ${e.reason?.message || '網路連接問題'}`);
+                }
+            });
+
+            const payload = {
+                memoir_id: window.__MEMOIR_ID__,
+                repo_url: window.location.origin + window.location.pathname.split('/').slice(0,3).join('/'),
+                page_path: window.location.pathname
+            };
+            window.initializeMemoirApp = initializeApp; // 導出給回退解密 util 呼叫
+        })();
+    </script>
+    
+    <!-- 版權聲明 -->
+    <script nonce="dc1db737-7bfd-4ce3-92e0-9a58463ebd5a">
+        // 綁定重新載入
+        document.getElementById('retryBtn')?.addEventListener('click', () => location.reload());
+
+        console.log('%c🔒 生成時間: 2025-08-14T23:52:35.543047300+00:00', 'color: #6b7280; font-size: 10px;');
+        console.log('%c🔐 版權所有 © MemoirFlow (加密版)', 'color: #6b7280; font-size: 10px;');
+        console.log('%c🛡️ 此內容受 AES-256-GCM 加密保護', 'color: #10b981; font-size: 10px;');
+    </script>
+</body>
+</html>
