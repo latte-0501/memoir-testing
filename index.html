@@ -30,26 +30,61 @@
     <meta name="approval-required" content="true">
 
     <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self' https://mastermaso.com;
+        default-src 'self';
+        img-src 'self' https: data: blob:;
+        script-src 'self' 'nonce-72a84653-0f3a-48c0-a5ac-fa996c641fb4' https://unpkg.com https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://mastermaso.com https://mastermaso.com/memoirflow https://unpkg.com;
         base-uri 'self';
         object-src 'none';
-        script-src 'self' https://unpkg.com 'nonce-81a53378-2dfa-41ba-8954-c878fec19e97';
-        style-src 'self' 'unsafe-inline' https://mastermaso.com;
-        img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com https://mastermaso.com;
         font-src 'self' data:;
-        connect-src 'self' https://mastermaso.com https://mastermaso.com/memoirflow;
         frame-src https://www.youtube.com https://www.youtube-nocookie.com;
         upgrade-insecure-requests; 
         block-all-mixed-content;
     ">
 
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 
     <!-- External Libraries -->
-    <script src="https://unpkg.com/lucide@latest" nonce="81a53378-2dfa-41ba-8954-c878fec19e97"></script>
+    <script src="https://unpkg.com/lucide@latest" nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4"></script>
 
     <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+        (async () => {
+        const MEMOIR_ID = "3e587b6b-1fcd-41fd-8b9c-3c61d4078ec7";   // 匯出時替換
+        const API_ORIGIN = "https://mastermaso.com/memoirflow"; // 你的後端
+
+        // 1) 先查核
+        const ac = await fetch(`${API_ORIGIN}/api/memoirs/${MEMOIR_ID}/access`, {cache:"no-store"}).then(r=>r.json());
+        if (!ac.allowed) {
+            document.body.innerHTML = `
+            <div style="color:#eee;padding:3rem;text-align:center">
+                <h1>此回憶錄已被作者暫停公開</h1>
+                <p>如需存取，請聯繫作者或稍後再試。</p>
+            </div>`;
+            return; // 不載入任何加密分片
+        }
+
+        // 2) 用一次性票證換金鑰
+        const ex = await fetch(`${API_ORIGIN}/api/memoirs/${MEMOIR_ID}/key-exchange`, {
+            method:"POST",
+            headers:{ "content-type":"application/json" },
+            body: JSON.stringify({ nonce: ac.nonce, exp: ac.exp, sig: ac.sig })
+        }).then(r=>r.json());
+
+        if (!ex.ok) {
+            document.body.innerHTML = `<div style="color:#eee;padding:3rem;text-align:center">
+            <h1>目前無法解密內容</h1><p>${ex.reason || ""}</p></div>`;
+            return;
+        }
+
+        // 3) 拿到 key 後再載入你的 decrypt 模組與加密分片
+        window.__MEMOIR_DECRYPT_KEY__ = ex.key;
+        // 後續沿用你原本的分片下載 + 解密流程…
+        })();
+    </script>
 </head>
 <body>
     <!-- 🔐 密碼輸入面板 - 必要元件 -->
@@ -287,7 +322,7 @@
     </div>
 
     <!-- 🚨 修正的審核腳本 - 使用正確的模板變數 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         (() => {
             const q = (n) => document.querySelector(n);
             const BACKEND      = q('meta[name="backend-url"]')?.content || 'https://mastermaso.com/memoirflow';
@@ -319,45 +354,107 @@
             // ✅ 核可：成功就採用伺服器狀態；失敗/404/斷網 → 先放行，但啟動背景輪詢
             async function checkApprovalOnce() {
                 if (!REQUIRE || !BACKEND) {
-                window.__APPROVAL__ = { ok: true, token: null, status: 'skipped' };
-                return { ok: true, status: 'skipped' };
+                    window.__APPROVAL__ = { ok: true, token: null, status: 'skipped' };
+                    return { ok: true, status: 'skipped' };
                 }
 
                 await audit('/api/admin/track/attempt', { event: 'view_attempt' });
 
                 try {
-                const res = await fetch(`${BACKEND}/api/access/authorize`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                    memoir_id: MEMOIR_ID,
-                    content_hash: CONTENT_HASH,
-                    page_path: location.pathname,
-                    repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
-                    })
-                });
+                    console.log('🔍 發送審核請求到:', `${BACKEND}/api/access/authorize`);
+                    
+                    const res = await fetch(`${BACKEND}/api/access/authorize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            memoir_id: MEMOIR_ID,
+                            content_hash: CONTENT_HASH,
+                            page_path: location.pathname,
+                            repo_url: location.origin + location.pathname.split('/').slice(0,3).join('/'),
+                        })
+                    });
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json(); // {status:'approved'|'pending'|'rejected'|'suspended', reason?, token?}
+                    console.log('📥 審核 API 回應狀態:', res.status);
 
-                window.__APPROVAL__.status = data.status;
-                window.__APPROVAL__.token  = data.token || null;
-                if (data.status === 'approved' || data.status === 'pending') {
-                    // ← pending 也先讓看（fail-open），之後輪詢
-                    window.__APPROVAL__.ok = true;
-                    return { ok: true, status: data.status };
-                }
+                    // 🚨 關鍵修正：正確處理所有 HTTP 狀態碼
+                    if (res.ok) {
+                        // 200, 202 等成功狀態
+                        const data = await res.json();
+                        console.log('✅ 審核回應數據:', data);
+                        
+                        window.__APPROVAL__.status = data.status;
+                        window.__APPROVAL__.token = data.token || null;
+                        
+                        if (data.status === 'approved') {
+                            window.__APPROVAL__.ok = true;
+                            return { ok: true, status: data.status };
+                        } else if (data.status === 'pending') {
+                            // pending 狀態可以選擇允許或封鎖，這裡允許
+                            window.__APPROVAL__.ok = true;
+                            return { ok: true, status: data.status };
+                        } else {
+                            // 其他狀態視為拒絕
+                            window.__APPROVAL__.ok = false;
+                            showBlocked(data.reason || '審核未通過');
+                            await audit('/api/admin/track/deny', { 
+                                event: 'view_denied', 
+                                status: data.status, 
+                                reason: data.reason 
+                            });
+                            return { ok: false, status: data.status };
+                        }
+                    } else {
+                        // 🚨 重要：處理 HTTP 錯誤狀態碼 (403, 404, 500 等)
+                        let data;
+                        try {
+                            data = await res.json();
+                            console.log('❌ 審核被拒絕，回應數據:', data);
+                        } catch (jsonError) {
+                            console.error('❌ 無法解析錯誤回應 JSON:', jsonError);
+                            data = { 
+                                status: 'rejected', 
+                                reason: `HTTP ${res.status}: ${res.statusText}` 
+                            };
+                        }
 
-                // 伺服器明確拒絕/暫停 → 立即封鎖
-                window.__APPROVAL__.ok = false;
-                showBlocked(data.reason || '已拒絕/暫停');
-                await audit('/api/admin/track/deny', { event: 'view_denied', status: data.status, reason: data.reason });
-                return { ok: false, status: data.status };
+                        // 🚨 關鍵：明確的拒絕處理
+                        window.__APPROVAL__.ok = false;
+                        window.__APPROVAL__.status = data.status || 'rejected';
+                        
+                        const reason = data.reason || data.message || `審核被拒絕 (HTTP ${res.status})`;
+                        showBlocked(reason);
+                        
+                        await audit('/api/admin/track/deny', { 
+                            event: 'view_denied', 
+                            status: data.status || 'rejected',
+                            reason: reason,
+                            http_status: res.status
+                        });
+                        
+                        return { ok: false, status: data.status || 'rejected' };
+                    }
 
                 } catch (err) {
-                // ⬇️ 改成 fail-open：先讓看，但啟動背景輪詢
-                window.__APPROVAL__ = { ok: true, token: null, status: 'soft_open' };
-                return { ok: true, status: 'soft_open' };
+                    console.error('❌ 審核檢查網路錯誤:', err);
+                    
+                    // 🚨 修正：網路錯誤時的處理
+                    // 檢查是否為實際的網路問題 vs 被 CORS 阻擋
+                    const isNetworkError = err.name === 'TypeError' && err.message.includes('Failed to fetch');
+                    const isCorsError = err.message.includes('CORS') || err.message.includes('Access-Control');
+                    
+                    if (isNetworkError || isCorsError) {
+                        // 真正的網路問題：fail-secure（嚴格模式）
+                        console.log('🔒 網路錯誤，採用嚴格模式');
+                        window.__APPROVAL__ = { ok: false, token: null, status: 'network_error' };
+                        showBlocked('無法連接到審核服務，請檢查網路連接');
+                        return { ok: false, status: 'network_error' };
+                    } else {
+                        // 其他錯誤：也採用嚴格模式
+                        console.log('🔒 未知錯誤，採用嚴格模式');
+                        window.__APPROVAL__ = { ok: false, token: null, status: 'unknown_error' };
+                        showBlocked('審核檢查失敗，請稍後再試');
+                        return { ok: false, status: 'unknown_error' };
+                    }
                 }
             }
 
@@ -392,30 +489,58 @@
             }
 
             function showBlocked(msg) {
+                console.log('🚫 顯示封鎖畫面:', msg);
+                
                 const loading = document.getElementById('loadingScreen');
-                const pwd     = document.getElementById('passwordModal');
-                const app     = document.getElementById('app');
-                const block   = document.getElementById('blockedScreen');
-                const br      = document.getElementById('blockedReason');
+                const pwd = document.getElementById('passwordModal');
+                const app = document.getElementById('app');
+                const block = document.getElementById('blockedScreen');
+                const br = document.getElementById('blockedReason');
 
+                // 隱藏其他元素
                 loading?.classList.add('hidden');
                 pwd?.classList.add('hidden');
                 app?.classList.add('hidden');
-                if (br) br.textContent = msg || br.textContent;
+                
+                // 更新封鎖原因
+                if (br) {
+                    br.textContent = msg || '依據審核政策，該內容目前無法瀏覽。';
+                }
+                
+                // 顯示封鎖畫面
                 block?.classList.remove('hidden');
+                
+                // 🚨 重要：停止所有其他初始化流程
+                if (window._autoDecryptImpl) {
+                    window._autoDecryptImpl = null;
+                }
+                if (window._decryptWithPwdImpl) {
+                    window._decryptWithPwdImpl = null;
+                }
             }
 
             // ⬅️ 關鍵：初始化時「先核可一次」，不過任何非 approved 但非明確拒絕的狀態都放行，然後啟動輪詢
             window.__preInitApproval__ = async function () {
+                console.log('🔍 開始預初始化審核檢查');
                 const gate = await checkApprovalOnce();
-                if (gate.ok) startApprovalPolling(60000);
+                console.log('🔍 審核檢查結果:', gate);
+                
+                if (gate.ok) {
+                    console.log('✅ 審核通過，啟動輪詢');
+                    startApprovalPolling(60000);
+                } else {
+                    console.log('❌ 審核未通過，停止所有流程');
+                    // 確保不會繼續執行解密或初始化
+                    return false;
+                }
+                
                 return !!gate.ok;
             };
         })();
     </script>
 
     <!-- ✅ 放在 audit/核可程式之後、
-        <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+        <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         // 🔐 MemoirFlow 統一前端解密系統 - 修正版本
         (function() {
             'use strict';
@@ -727,7 +852,7 @@
         })();
         </script>
          之前 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         let _autoDecryptImpl, _decryptWithPwdImpl;
 
         Object.defineProperty(window, 'autoDecrypt', {
@@ -757,7 +882,7 @@
 
     <!-- 🔐 解密腳本注入點 - 關鍵！這是解密腳本的注入位置 -->
     
-        <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+        <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         // 🔐 MemoirFlow 統一前端解密系統 - 修正版本
         (function() {
             'use strict';
@@ -1071,7 +1196,7 @@
         
 
     <!-- 安全性增強腳本 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         // 🔐 防止右鍵選單和常見快捷鍵
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
@@ -1314,14 +1439,14 @@
     </div>
 
     <!-- 數據注入點 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
             // 🔐 加密模式：數據將透過解密腳本載入
             console.log('🔐 加密模式初始化');
             window.MEMOIR_DATA = null; // 將由解密腳本設定
             </script>
 
     <!-- 主要腳本 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         (function() {
             'use strict';
             
@@ -3382,11 +3507,11 @@
     </script>
     
     <!-- 版權聲明 -->
-    <script nonce="81a53378-2dfa-41ba-8954-c878fec19e97">
+    <script nonce="72a84653-0f3a-48c0-a5ac-fa996c641fb4">
         // 綁定重新載入
         document.getElementById('retryBtn')?.addEventListener('click', () => location.reload());
 
-        console.log('%c🔒 生成時間: 2025-08-14T23:53:49.181374400+00:00', 'color: #6b7280; font-size: 10px;');
+        console.log('%c🔒 生成時間: 2025-08-16T04:35:27.673027200+00:00', 'color: #6b7280; font-size: 10px;');
         console.log('%c🔐 版權所有 © MemoirFlow (加密版)', 'color: #6b7280; font-size: 10px;');
         console.log('%c🛡️ 此內容受 AES-256-GCM 加密保護', 'color: #10b981; font-size: 10px;');
     </script>
